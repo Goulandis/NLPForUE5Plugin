@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "NLPFORUE",
+	"Description": "A plugin that uses NPL functionality in UnrealEngine",
+	"Category": "Other",
+	"CreatedBy": "Goulandis",
+	"CreatedByURL": "https://github.com/Goulandis/NLPForUE5Plugin",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "NLPFORUE",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

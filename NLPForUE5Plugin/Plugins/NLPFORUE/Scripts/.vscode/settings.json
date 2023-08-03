@@ -1,0 +1,8 @@
+{
+    // 配置python语言正常输出中文的环境
+"code-runner.executorMap":{
+    // 选择yolov5虚拟环境
+    "python":"set PYTHONIOENCODING=utf8 && C:\\UE_5.2\\Engine\\Binaries\\ThirdParty\\Python3\\Win64\\python.exe" 
+}, 
+"code-runner.runInTerminal": false,
+}
