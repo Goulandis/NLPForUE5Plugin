@@ -5,6 +5,5 @@ def soc(jsondata):
     fun(jsondata)
 
 def ltp(jsondata):
-    print('Call ltp')
     fun = getattr(td,jsondata['type'])
     return fun(jsondata)
