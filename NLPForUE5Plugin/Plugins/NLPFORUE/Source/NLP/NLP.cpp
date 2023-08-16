@@ -1,4 +1,17 @@
 ﻿#include "NLP.h"
-#include "Modules/ModuleManager.h"
+#include "../NLPFORUE/Common/FDefine.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl,NLP,"NLP");
+DEFINE_LOG_CATEGORY(LOGNLPFORUE);
+
+IMPLEMENT_PRIMARY_GAME_MODULE(FNLP,NLP,"NLP");
+
+void FNLP::StartupModule()
+{
+	UE_LOG(LOGNLPFORUE,Log,TEXT("NLP module started up"));
+	//IModuleInterface::StartupModule();
+}
+
+void FNLP::ShutdownModule()
+{
+	IModuleInterface::ShutdownModule();
+}

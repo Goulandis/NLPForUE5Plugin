@@ -19,6 +19,11 @@
 			"Name": "NLPFORUE",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "NLP",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	]
 }

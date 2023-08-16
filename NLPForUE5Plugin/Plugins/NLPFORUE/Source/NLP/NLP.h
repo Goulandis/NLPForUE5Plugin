@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
+
 class FNLP : public IModuleInterface
 {
 	virtual void StartupModule() override;
