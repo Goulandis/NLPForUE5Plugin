@@ -9,8 +9,9 @@ NLPForUE5Plugin/.vsconfig
 NLPForUE5Plugin/.idea
 NLPForUE5Plugin/Plugins/NLPFORUE/Binaries
 NLPForUE5Plugin/Plugins/NLPFORUE/Intermediate
-DataSets
-envs
-ThirdApplication
-ThirdParty
+DataSets/
+envs/
+/ThirdApplication/
+ThirdParty/
 NLPForUE5Plugin/Plugins/NLPFORUE/Scripts/db.sqlite3
+Scripts.lnk
