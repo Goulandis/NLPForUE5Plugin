@@ -15,7 +15,7 @@ directory_to_search = '../../../../DataSets/chinese_chatbot_corpus/clean_chat_co
 file_extensions = ['.txt', '.yml', '.tsv']
 chatbot = None
 # 名字
-chatbotname = '雪黧'
+chatbotname = '菠菜'
 # 加载的适配器
 # logic_adapters = [
 #     'chatterbot.logic.MathematicalEvaluation',
@@ -45,8 +45,8 @@ def InitBot():
         storage_adapter='chatterbot.storage.SQLStorageAdapter',
         logic_adapters=[
         'chatterbot.logic.BestMatch',
-        # 'chatterbot.logic.MathematicalEvaluation',
-        # 'chatterbot.logic.TimeLogicAdapter'  
+         'chatterbot.logic.MathematicalEvaluation',
+         'chatterbot.logic.TimeLogicAdapter'  
         ],
         preprocessors=[
             'chatterbot.preprocessors.clean_whitespace'
@@ -84,10 +84,10 @@ def ChatbotSetup():
     global chatbot
     InitBot()
     while True:
-        print('Me:')
+        print('我:')
         inp = input()
         response = chatbot.get_response(inp)
-        print('Bot:')
+        print('菠菜:')
         print(response)
 
 ChatbotSetup()

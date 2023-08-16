@@ -3,6 +3,7 @@
 "code-runner.executorMap":{
     // 选择yolov5虚拟环境
     "python":"set PYTHONIOENCODING=utf8 && E:\\Anaconda\\envs\\NLPFORUE\\python.exe" 
+    //sdlkm "python":"set PYTHONIOENCODING=utf8 && C:\\UE_5.2\\Engine\\Binaries\\ThirdParty\\Python3\\Win64\\python.exe" 
 }, 
 "code-runner.runInTerminal": false,
 }

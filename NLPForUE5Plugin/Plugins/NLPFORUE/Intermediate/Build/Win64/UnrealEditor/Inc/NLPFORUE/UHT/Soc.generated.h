@@ -25,6 +25,7 @@ NLPFORUE_API void FOnConnected_DelegateWrapper(const FMulticastScriptDelegate& O
 #define FID_NLPForUE5Plugin_Plugins_NLPFORUE_Source_NLPFORUE_Network_Soc_h_14_SPARSE_DATA
 #define FID_NLPForUE5Plugin_Plugins_NLPFORUE_Source_NLPFORUE_Network_Soc_h_14_RPC_WRAPPERS \
  \
+	DECLARE_FUNCTION(execCmdFormat); \
 	DECLARE_FUNCTION(execSocClose); \
 	DECLARE_FUNCTION(execConnetLTP); \
 	DECLARE_FUNCTION(execSendCmd); \
@@ -33,6 +34,7 @@ NLPFORUE_API void FOnConnected_DelegateWrapper(const FMulticastScriptDelegate& O
 
 #define FID_NLPForUE5Plugin_Plugins_NLPFORUE_Source_NLPFORUE_Network_Soc_h_14_RPC_WRAPPERS_NO_PURE_DECLS \
  \
+	DECLARE_FUNCTION(execCmdFormat); \
 	DECLARE_FUNCTION(execSocClose); \
 	DECLARE_FUNCTION(execConnetLTP); \
 	DECLARE_FUNCTION(execSendCmd); \

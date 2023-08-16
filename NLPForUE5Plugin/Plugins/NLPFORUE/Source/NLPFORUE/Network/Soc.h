@@ -31,6 +31,7 @@ public:
 	void ConnetLTP(const FString& InIP = "127.0.0.1",const int32 InPort = 7214,const FString& SocDescription = "tlp client");
 	UFUNCTION(BlueprintCallable,Category="NLPFORUE|Network")
 	void SocClose();
+	UFUNCTION(BlueprintCallable,Category="NLPFORUE|Network")
 	FString CmdFormat(const FString& Cmd,const FString& Type,const FString& Data);
 	//中英文混合utf-8编码字符串字节数量计算
 	int32 CalcUtf0NumFromString(const FString& Str);

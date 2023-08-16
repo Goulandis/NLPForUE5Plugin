@@ -84,6 +84,16 @@ void FOnConnected_DelegateWrapper(const FMulticastScriptDelegate& OnConnected)
 {
 	OnConnected.ProcessMulticastDelegate<UObject>(NULL);
 }
+	DEFINE_FUNCTION(ASoc::execCmdFormat)
+	{
+		P_GET_PROPERTY(FStrProperty,Z_Param_Cmd);
+		P_GET_PROPERTY(FStrProperty,Z_Param_Type);
+		P_GET_PROPERTY(FStrProperty,Z_Param_Data);
+		P_FINISH;
+		P_NATIVE_BEGIN;
+		*(FString*)Z_Param__Result=P_THIS->CmdFormat(Z_Param_Cmd,Z_Param_Type,Z_Param_Data);
+		P_NATIVE_END;
+	}
 	DEFINE_FUNCTION(ASoc::execSocClose)
 	{
 		P_FINISH;
@@ -123,12 +133,82 @@ void FOnConnected_DelegateWrapper(const FMulticastScriptDelegate& OnConnected)
 	{
 		UClass* Class = ASoc::StaticClass();
 		static const FNameNativePtrPair Funcs[] = {
+			{ "CmdFormat", &ASoc::execCmdFormat },
 			{ "ConnetLTP", &ASoc::execConnetLTP },
 			{ "SendCmd", &ASoc::execSendCmd },
 			{ "SendMsg", &ASoc::execSendMsg },
 			{ "SocClose", &ASoc::execSocClose },
 		};
 		FNativeFunctionRegistrar::RegisterFunctions(Class, Funcs, UE_ARRAY_COUNT(Funcs));
+	}
+	struct Z_Construct_UFunction_ASoc_CmdFormat_Statics
+	{
+		struct Soc_eventCmdFormat_Parms
+		{
+			FString Cmd;
+			FString Type;
+			FString Data;
+			FString ReturnValue;
+		};
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_Cmd_MetaData[];
+#endif
+		static const UECodeGen_Private::FStrPropertyParams NewProp_Cmd;
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_Type_MetaData[];
+#endif
+		static const UECodeGen_Private::FStrPropertyParams NewProp_Type;
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_Data_MetaData[];
+#endif
+		static const UECodeGen_Private::FStrPropertyParams NewProp_Data;
+		static const UECodeGen_Private::FStrPropertyParams NewProp_ReturnValue;
+		static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam Function_MetaDataParams[];
+#endif
+		static const UECodeGen_Private::FFunctionParams FuncParams;
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Cmd_MetaData[] = {
+		{ "NativeConst", "" },
+	};
+#endif
+	const UECodeGen_Private::FStrPropertyParams Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Cmd = { "Cmd", nullptr, (EPropertyFlags)0x0010000000000080, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, 1, nullptr, nullptr, STRUCT_OFFSET(Soc_eventCmdFormat_Parms, Cmd), METADATA_PARAMS(Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Cmd_MetaData, UE_ARRAY_COUNT(Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Cmd_MetaData)) };
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Type_MetaData[] = {
+		{ "NativeConst", "" },
+	};
+#endif
+	const UECodeGen_Private::FStrPropertyParams Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Type = { "Type", nullptr, (EPropertyFlags)0x0010000000000080, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, 1, nullptr, nullptr, STRUCT_OFFSET(Soc_eventCmdFormat_Parms, Type), METADATA_PARAMS(Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Type_MetaData, UE_ARRAY_COUNT(Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Type_MetaData)) };
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Data_MetaData[] = {
+		{ "NativeConst", "" },
+	};
+#endif
+	const UECodeGen_Private::FStrPropertyParams Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Data = { "Data", nullptr, (EPropertyFlags)0x0010000000000080, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, 1, nullptr, nullptr, STRUCT_OFFSET(Soc_eventCmdFormat_Parms, Data), METADATA_PARAMS(Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Data_MetaData, UE_ARRAY_COUNT(Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Data_MetaData)) };
+	const UECodeGen_Private::FStrPropertyParams Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_ReturnValue = { "ReturnValue", nullptr, (EPropertyFlags)0x0010000000000580, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, 1, nullptr, nullptr, STRUCT_OFFSET(Soc_eventCmdFormat_Parms, ReturnValue), METADATA_PARAMS(nullptr, 0) };
+	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UFunction_ASoc_CmdFormat_Statics::PropPointers[] = {
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Cmd,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Type,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_Data,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_ASoc_CmdFormat_Statics::NewProp_ReturnValue,
+	};
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UFunction_ASoc_CmdFormat_Statics::Function_MetaDataParams[] = {
+		{ "Category", "NLPFORUE|Network" },
+		{ "ModuleRelativePath", "Network/Soc.h" },
+	};
+#endif
+	const UECodeGen_Private::FFunctionParams Z_Construct_UFunction_ASoc_CmdFormat_Statics::FuncParams = { (UObject*(*)())Z_Construct_UClass_ASoc, nullptr, "CmdFormat", nullptr, nullptr, sizeof(Z_Construct_UFunction_ASoc_CmdFormat_Statics::Soc_eventCmdFormat_Parms), Z_Construct_UFunction_ASoc_CmdFormat_Statics::PropPointers, UE_ARRAY_COUNT(Z_Construct_UFunction_ASoc_CmdFormat_Statics::PropPointers), RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x04020401, 0, 0, METADATA_PARAMS(Z_Construct_UFunction_ASoc_CmdFormat_Statics::Function_MetaDataParams, UE_ARRAY_COUNT(Z_Construct_UFunction_ASoc_CmdFormat_Statics::Function_MetaDataParams)) };
+	UFunction* Z_Construct_UFunction_ASoc_CmdFormat()
+	{
+		static UFunction* ReturnFunction = nullptr;
+		if (!ReturnFunction)
+		{
+			UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UFunction_ASoc_CmdFormat_Statics::FuncParams);
+		}
+		return ReturnFunction;
 	}
 	struct Z_Construct_UFunction_ASoc_ConnetLTP_Statics
 	{
@@ -374,6 +454,7 @@ void FOnConnected_DelegateWrapper(const FMulticastScriptDelegate& OnConnected)
 		(UObject* (*)())Z_Construct_UPackage__Script_NLPFORUE,
 	};
 	const FClassFunctionLinkInfo Z_Construct_UClass_ASoc_Statics::FuncInfo[] = {
+		{ &Z_Construct_UFunction_ASoc_CmdFormat, "CmdFormat" }, // 2052601130
 		{ &Z_Construct_UFunction_ASoc_ConnetLTP, "ConnetLTP" }, // 2544914232
 		{ &Z_Construct_UFunction_ASoc_SendCmd, "SendCmd" }, // 873873971
 		{ &Z_Construct_UFunction_ASoc_SendMsg, "SendMsg" }, // 2014922531
@@ -437,9 +518,9 @@ void FOnConnected_DelegateWrapper(const FMulticastScriptDelegate& OnConnected)
 		static const FClassRegisterCompiledInInfo ClassInfo[];
 	};
 	const FClassRegisterCompiledInInfo Z_CompiledInDeferFile_FID_NLPForUE5Plugin_Plugins_NLPFORUE_Source_NLPFORUE_Network_Soc_h_Statics::ClassInfo[] = {
-		{ Z_Construct_UClass_ASoc, ASoc::StaticClass, TEXT("ASoc"), &Z_Registration_Info_UClass_ASoc, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ASoc), 1709902466U) },
+		{ Z_Construct_UClass_ASoc, ASoc::StaticClass, TEXT("ASoc"), &Z_Registration_Info_UClass_ASoc, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(ASoc), 3226308504U) },
 	};
-	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_NLPForUE5Plugin_Plugins_NLPFORUE_Source_NLPFORUE_Network_Soc_h_3924015570(TEXT("/Script/NLPFORUE"),
+	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_NLPForUE5Plugin_Plugins_NLPFORUE_Source_NLPFORUE_Network_Soc_h_2313054071(TEXT("/Script/NLPFORUE"),
 		Z_CompiledInDeferFile_FID_NLPForUE5Plugin_Plugins_NLPFORUE_Source_NLPFORUE_Network_Soc_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_NLPForUE5Plugin_Plugins_NLPFORUE_Source_NLPFORUE_Network_Soc_h_Statics::ClassInfo),
 		nullptr, 0,
 		nullptr, 0);

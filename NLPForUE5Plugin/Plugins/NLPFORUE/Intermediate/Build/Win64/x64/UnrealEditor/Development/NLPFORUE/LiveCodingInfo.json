@@ -6,8 +6,8 @@
 			"Soc.gen.cpp.obj",
 			"FDefine.cpp.obj",
 			"FSocRunnable.cpp.obj",
-			"Soc.cpp.obj",
-			"NLPFORUE.cpp.obj"
+			"NLPFORUE.cpp.obj",
+			"Soc.cpp.obj"
 		]
 	}
 }
