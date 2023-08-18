@@ -1,13 +1,13 @@
 ﻿#include "NLP.h"
-#include "../NLPFORUE/Common/FDefine.h"
+#include "Preprossors/FPreprossorsType.h"
 
-DEFINE_LOG_CATEGORY(LOGNLPFORUE);
+//DEFINE_LOG_CATEGORY(LOGNLP);
 
 IMPLEMENT_PRIMARY_GAME_MODULE(FNLP,NLP,"NLP");
 
 void FNLP::StartupModule()
 {
-	UE_LOG(LOGNLPFORUE,Log,TEXT("NLP module started up"));
+	UE_LOG(LOGNLP,Log,TEXT("NLP module started up"));
 	//IModuleInterface::StartupModule();
 }
 

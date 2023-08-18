@@ -27,7 +27,8 @@ public class NLPFORUE : ModuleRules
 			{
 				"Core",
 				"Sockets",
-				"Networking"
+				"Networking",
+				"NLP"
 			}
 			);
 			
