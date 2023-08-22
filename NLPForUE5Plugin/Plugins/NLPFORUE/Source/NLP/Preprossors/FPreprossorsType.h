@@ -21,8 +21,10 @@ enum ELanguageType
 	zh_HK//繁体中文(香港)
 };
 
-const char* const DICT_PATH = "../../ThirdParty/cppjieba/dict/jieba.dict.utf8";
-const char* const HMM_PATH = ".../../ThirdParty/cppjieba/dict/hmm_model.utf8";
-const char* const USER_DICT_PATH = "../../ThirdParty/cppjieba/dict/user.dict.utf8";
-const char* const IDF_PATH = "../../ThirdParty/cppjieba/dict/idf.utf8";
-const char* const STOP_WORD_PATH = "../../ThirdParty/cppjieba/dict/stop_words.utf8";
+const char* const COM_PATH = "NLPFORUE/Source/";
+const char* const DICT_PATH = "cppjieba/dict/jieba.dict.utf8";
+const char* const HMM_PATH = "cppjieba/dict/hmm_model.utf8";
+const char* const USER_DICT_PATH = "cppjieba/dict/user.dict.utf8";
+const char* const IDF_PATH = "cppjieba/dict/idf.utf8";
+const char* const STOP_WORD_PATH = "cppjieba/dict/stop_words.utf8";
+const char* const BANNE_WORD_PATH= "Resources/badwords/";

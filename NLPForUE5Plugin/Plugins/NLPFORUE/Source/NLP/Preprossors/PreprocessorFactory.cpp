@@ -1,6 +1,8 @@
 #include "PreprocessorFactory.h"
 #include "FPreprossorsType.h"
 
+DEFINE_LOG_CATEGORY(LOGNLP);
+
 TSharedPtr<UPreprocessorFactory> UPreprocessorFactory::Instance = nullptr;
 
 TSharedPtr<UPreprocessorFactory> UPreprocessorFactory::CreateInstance()

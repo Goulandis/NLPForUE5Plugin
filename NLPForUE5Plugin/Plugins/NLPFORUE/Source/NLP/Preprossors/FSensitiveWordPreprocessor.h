@@ -1,15 +1,22 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
-
+#include <unordered_set>
+#include "FPreprocessor.h"
 #include "CoreMinimal.h"
 
-/**
- * 
- */
-class NLP_API FSensitiveWordPreprocessor
+using namespace std;
+
+class NLP_API FSensitiveWordPreprocessor : public FPreprocessor
 {
 public:
-	FSensitiveWordPreprocessor();
+	static FSensitiveWordPreprocessor& CreateInstance();
 	~FSensitiveWordPreprocessor();
+
+	void LoadSensitiveWordDict(const string& Path);
+	vector<string> SensitiveWordFiltering(string Text);
+	//vector<string> SensitiveWordFiltering(vector<string> Words);
+private:
+	FSensitiveWordPreprocessor();
+
+private:
+	unordered_set<string> SensitiveWords;
 };

@@ -1,6 +1,6 @@
 #include "FLanguageJudgmentPreprocessor.h"
 
-DEFINE_LOG_CATEGORY(LOGNLP);
+//DEFINE_LOG_CATEGORY(LOGNLP);
 
 FLanguageJudgmentPreprocessor::FLanguageJudgmentPreprocessor()
 {

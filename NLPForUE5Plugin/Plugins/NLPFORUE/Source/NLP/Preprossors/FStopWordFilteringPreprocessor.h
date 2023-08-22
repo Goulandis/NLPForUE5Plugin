@@ -1,15 +1,20 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
-
+#include "cppjieba/Jieba.hpp"
+#include "FPreprocessor.h"
 #include "CoreMinimal.h"
 
-/**
- * 
- */
-class NLP_API FStopWordFilteringPreprocessor
+class NLP_API FStopWordFilteringPreprocessor : public FPreprocessor
 {
 public:
-	FStopWordFilteringPreprocessor();
+	static FStopWordFilteringPreprocessor& CreateInstance();
+	
 	~FStopWordFilteringPreprocessor();
+	
+	vector<string> StopWordFiltering(string Text);
+	vector<string> StopWordFiltering(vector<string> Words);
+private:
+	FStopWordFilteringPreprocessor();
+
+private:
+	cppjieba::Jieba* Tokenizer;
 };

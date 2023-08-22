@@ -8,9 +8,9 @@ public class NLP : ModuleRules
 		get { return ModuleDirectory; }
 	}
 
-	private string ThirdPartyPath
+	private string CppJiebaPath
 	{
-		get { return Path.GetFullPath(Path.Combine(ModulePath, "../ThirdParty")); }
+		get { return Path.GetFullPath(Path.Combine(ModulePath, "../cppjieba")); }
 	}
 
 	public NLP(ReadOnlyTargetRules Target) : base(Target)
@@ -27,8 +27,8 @@ public class NLP : ModuleRules
 		
 		PublicIncludePaths.AddRange(new string[]
 		{
-			Path.Combine(ThirdPartyPath,"cppjieba/include"),
-			Path.Combine(ThirdPartyPath,"cppjieba/deps/limonp/include")
+			Path.Combine(CppJiebaPath,"include"),
+			Path.Combine(CppJiebaPath,"deps/limonp/include")
 		});
 	}
 }

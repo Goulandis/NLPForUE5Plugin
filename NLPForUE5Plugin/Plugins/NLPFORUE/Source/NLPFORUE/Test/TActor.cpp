@@ -17,9 +17,6 @@ ATActor::ATActor()
 void ATActor::BeginPlay()
 {
 	Super::BeginPlay();
-	FString Rel = DeteleSpecialSymbol(TEXT("这是一个测    试用例	，删除Tab键\n，删除换行符\t，删除制表符"));
-	
-	UE_LOG(LOGNLPFORUE,Log,TEXT("%s"),*Rel);
 }
 
 ELanguageType ATActor::GetLanguageType()
@@ -39,13 +36,32 @@ FString ATActor::DeteleSpecialSymbol(FString Text)
 FString ATActor::CWS(FString Text)
 {
 	cppjieba::Jieba jieba(
-		DICT_PATH,
-		HMM_PATH,
-		USER_DICT_PATH,
-		IDF_PATH,
-		STOP_WORD_PATH
+		TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + COM_PATH + DICT_PATH)),
+		TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + COM_PATH + HMM_PATH)),
+		TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + COM_PATH + USER_DICT_PATH)),
+		TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + COM_PATH + IDF_PATH)),
+		TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + COM_PATH + STOP_WORD_PATH))
 		);
-	
+	vector<string> words;
+	jieba.Cut(TCHAR_TO_UTF8(*Text),words,true);
+	FString Rel;
+	for(string str : words)
+	{
+		Rel += TEXT("\"") + FString(UTF8_TO_TCHAR(str.c_str())) + TEXT("\"  ");
+	}
+	return Rel;
+}
+
+TArray<FString> ATActor::StopWordFiltering(FString Text)
+{
+	FStopWordFilteringPreprocessor sw = UPreprocessorFactory::CreateInstance()->GetPreprocessor<FStopWordFilteringPreprocessor>();
+	vector<string> StopWords = sw.StopWordFiltering(TCHAR_TO_UTF8(*Text));
+	TArray<FString> Rel;
+	for(string tmp : StopWords)
+	{
+		Rel.Add(FString(UTF8_TO_TCHAR(tmp.c_str())));
+	}
+	return Rel;
 }
 
 // Called every frame

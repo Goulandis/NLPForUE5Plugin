@@ -2,7 +2,10 @@
 
 #pragma once
 #include <string>
+#include <vector>
 #include "CoreMinimal.h"
+
+using namespace std;
 
 class NLP_API FPreprocessor
 {
