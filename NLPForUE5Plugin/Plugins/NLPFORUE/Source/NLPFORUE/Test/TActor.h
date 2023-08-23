@@ -1,10 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-#include "NLP/Preprossors/PreprocessorFactory.h"
-#include "NLP/Preprossors/FLanguageJudgmentPreprocessor.h"
-#include "NLP/Preprossors/FSpecialSymbolPreprocessor.h"
-#include "NLP/Preprossors/FStopWordFilteringPreprocessor.h"
+#include "NLP/Preprossors/FPreprossorsType.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "TActor.generated.h"
@@ -29,6 +26,8 @@ protected:
 	FString CWS(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	TArray<FString> StopWordFiltering(FString Text);
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	FString SensitiveWordFiltering(FString Text);
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

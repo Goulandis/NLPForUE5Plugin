@@ -23,3 +23,6 @@ git submodule init
 git submodule update
 ```
 
+敏感词库：[observerss/textfilter: 敏感词过滤的几种实现+某1w词敏感词库 (github.com)](https://github.com/observerss/textfilter)
+
+敏感词库属于敏感资源，作者在上传分享后删除了最新版本的资源，可以通过回退操作恢复删除的资源。
