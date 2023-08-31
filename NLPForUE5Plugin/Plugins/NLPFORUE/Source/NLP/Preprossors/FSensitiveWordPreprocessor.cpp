@@ -1,6 +1,6 @@
 #include "FSensitiveWordPreprocessor.h"
-#include "FPreprossorsType.h"
 #include <fstream>
+#include "NLP/Common/LogDefine.h"
 
 DFATree::DFATree(const vector<string>& sensitive_words)
 {
@@ -169,6 +169,7 @@ void FSensitiveWordPreprocessor::LoadSensitiveWordDict(const string& Path)
 	UE_LOG(LOGNLP,Error,TEXT("SensitiveWords Len:%d"),(int)Len);
 	
 	DfaTree = new DFATree(SensitiveWords);
+	Ifs.close();
 }
 
 string FSensitiveWordPreprocessor::SensitiveWordFiltering(const string& Text)

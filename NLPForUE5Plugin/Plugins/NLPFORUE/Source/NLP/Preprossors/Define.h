@@ -1,18 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
-
-#include "CoreMinimal.h"
-
-DECLARE_LOG_CATEGORY_EXTERN(LOGNLP, All, All);
-
-class NLP_API FPreprossorsType
-{
-public:
-	FPreprossorsType();
-	~FPreprossorsType();
-};
-
+﻿#ifndef PRRPDEFINE
+#define PRRPDEFINE
 enum ELanguageType
 {
 	None,
@@ -27,3 +14,6 @@ const char* const HMM_PATH = "cppjieba/dict/hmm_model.utf8";
 const char* const USER_DICT_PATH = "cppjieba/dict/user.dict.utf8";
 const char* const IDF_PATH = "cppjieba/dict/idf.utf8";
 const char* const STOP_WORD_PATH = "cppjieba/dict/stop_words.utf8";
+const char* const SENSITIVE_WORD_PATH = "NLPFORUE/Resources/textfilter/keywords";
+
+#endif

@@ -1,21 +1,16 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 #include "FPreprocessor.h"
 #include "CoreMinimal.h"
 
-/**
- * 
- */
 class NLP_API FSpecialSymbolPreprocessor : public FPreprocessor
 {
 public:
 	~FSpecialSymbolPreprocessor();
 	static FSpecialSymbolPreprocessor& CreateInstance();
 
-	std::string DeteleSpecialSymbol(std::string Text);
-	std::string DeteleSpecialSymbol(FString Text);
-	bool IsSpecialSymbol(char& Chr);
+	std::string DeteleSpecialSymbol(const std::string& Text);
+	bool IsSpecialSymbol(const char& Chr);
+	std::string DeleteSpaceSymbol(const std::string& Text);
 private:
 	FSpecialSymbolPreprocessor();
 

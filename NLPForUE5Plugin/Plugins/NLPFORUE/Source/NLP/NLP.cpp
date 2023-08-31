@@ -1,7 +1,9 @@
 ﻿#include "NLP.h"
-#include "Preprossors/FPreprossorsType.h"
+#include "NLP/Common/LogDefine.h"
 
 IMPLEMENT_PRIMARY_GAME_MODULE(FNLP,NLP,"NLP");
+
+DEFINE_LOG_CATEGORY(LOGNLP);
 
 void FNLP::StartupModule()
 {

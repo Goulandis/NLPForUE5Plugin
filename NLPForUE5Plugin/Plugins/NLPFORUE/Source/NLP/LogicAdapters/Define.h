@@ -1,0 +1,1 @@
+﻿const char* const OPERATION_DICT_PATH = "NLPFORUE/Resources/Dicts/OperationDict";

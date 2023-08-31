@@ -1,6 +1,6 @@
 #include "FLanguageJudgmentPreprocessor.h"
-
-//DEFINE_LOG_CATEGORY(LOGNLP);
+#include "NLP/Common/LogDefine.h"
+#include "NLP/Common/GlobalManager.h"
 
 FLanguageJudgmentPreprocessor::FLanguageJudgmentPreprocessor()
 {
@@ -20,32 +20,22 @@ FLanguageJudgmentPreprocessor& FLanguageJudgmentPreprocessor::CreateInstance()
 
 ELanguageType FLanguageJudgmentPreprocessor::GetLanguageType(std::string& Text)
 {
-	int Len = Text.size()+1;
-	char* TChar = new char[Len];
-	strcpy_s(TChar,Len,Text.c_str());
-	char Chr;
-	while(true)
+	// 只要字符串中包含一个中文字符则认为字符串为中文
+	if(GlobalManager::IsChinese(Text))
 	{
-		Chr = *TChar++;
-		// 如果字符串直到结尾都没有出现中文字符，则认为字符串为英文
-		if(Chr == 0)
+		return ELanguageType::zh_CN;
+	}
+	else
+	{
+		// 如果字符串不包含中文字符，但匹配数学算式，默认抛到中文处理流程中处理
+		if(GlobalManager::RegexMathFormulas(Text))
 		{
-			break;
-		}
-		// 如果字符串中出现了中文，则认为字符串为中文
-		if((Chr & 0x80) && (*TChar & 0x80))
-		{
-			delete TChar;
 			return ELanguageType::zh_CN;
 		}
+		// 如果字符串不符合上面所有判断，则认为字符串为英文，目前只处理中文和英文
+		else
+		{
+			return ELanguageType::en_US;
+		}
 	}
-	delete TChar;
-	return ELanguageType::en_US;
-	
-}
-
-ELanguageType FLanguageJudgmentPreprocessor::GetLanguageType(FString Text)
-{
-	std::string Str = TCHAR_TO_UTF8(*Text);
-	return GetLanguageType(Str);
 }

@@ -1,0 +1,5 @@
+﻿#ifndef LOG_LOGNLP
+#define LOG_LOGNLP
+DECLARE_LOG_CATEGORY_EXTERN(LOGNLP, All, All);
+#endif
+

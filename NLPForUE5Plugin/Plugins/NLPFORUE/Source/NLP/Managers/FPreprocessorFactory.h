@@ -17,12 +17,14 @@ public:
 	template<typename T>
 	T* GetPreprocessor()
 	{
-		if(is_same<T,FLanguageJudgmentPreprocessor>::value) return (T*)(LanguageJudgmentPreprocessor);
-		if(is_same<T,FSensitiveWordPreprocessor>::value) return (T*)(SensitiveWordPreprocessor);
-		if(is_same<T,FSpecialSymbolPreprocessor>::value) return (T*)(SpecialSymbolPreprocessor);
-		if(is_same<T,FStopWordFilteringPreprocessor>::value) return (T*)(StopWordFilteringPreprocessor);
+		if(std::is_same<T,FLanguageJudgmentPreprocessor>::value) return (T*)(LanguageJudgmentPreprocessor);
+		if(std::is_same<T,FSensitiveWordPreprocessor>::value) return (T*)(SensitiveWordPreprocessor);
+		if(std::is_same<T,FSpecialSymbolPreprocessor>::value) return (T*)(SpecialSymbolPreprocessor);
+		if(std::is_same<T,FStopWordFilteringPreprocessor>::value) return (T*)(StopWordFilteringPreprocessor);
 		return nullptr;
 	}
+
+	//static void DestroyInstance();
 private:
 	FPreprocessorFactory();
 

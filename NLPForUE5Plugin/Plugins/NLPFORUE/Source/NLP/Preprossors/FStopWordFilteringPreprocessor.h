@@ -1,5 +1,4 @@
 #pragma once
-#include "cppjieba/Jieba.hpp"
 #include "FPreprocessor.h"
 #include "CoreMinimal.h"
 
@@ -14,7 +13,4 @@ public:
 	vector<string> StopWordFiltering(vector<string> Words);
 private:
 	FStopWordFilteringPreprocessor();
-
-private:
-	cppjieba::Jieba* Tokenizer;
 };

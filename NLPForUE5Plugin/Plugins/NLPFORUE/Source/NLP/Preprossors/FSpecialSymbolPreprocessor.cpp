@@ -1,17 +1,21 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "FSpecialSymbolPreprocessor.h"
 
-FSpecialSymbolPreprocessor::FSpecialSymbolPreprocessor()
+std::string FSpecialSymbolPreprocessor::DeleteSpaceSymbol(const std::string& Text)
 {
-	// BYTE Tmp[] = {0x00,0x08,0x0A,0x0D,0x0B,0x20};
-	// SpecialSymbols = &Tmp;
+	std::string Rel;
+	for(int i=0;i<Text.size();++i)
+	{
+		if(Text[i] != 0x20)
+		{
+			Rel += Text[i];
+		}
+	}
+	return Rel;
 }
 
-FSpecialSymbolPreprocessor::~FSpecialSymbolPreprocessor()
-{
-}
+FSpecialSymbolPreprocessor::FSpecialSymbolPreprocessor(){}
+
+FSpecialSymbolPreprocessor::~FSpecialSymbolPreprocessor(){}
 
 FSpecialSymbolPreprocessor& FSpecialSymbolPreprocessor::CreateInstance()
 {
@@ -19,7 +23,7 @@ FSpecialSymbolPreprocessor& FSpecialSymbolPreprocessor::CreateInstance()
 	return Instance;
 }
 
-std::string FSpecialSymbolPreprocessor::DeteleSpecialSymbol(std::string Text)
+std::string FSpecialSymbolPreprocessor::DeteleSpecialSymbol(const std::string& Text)
 {
 	int Len = Text.size()+1;
 	char* TChar = new char[Len];
@@ -43,13 +47,7 @@ std::string FSpecialSymbolPreprocessor::DeteleSpecialSymbol(std::string Text)
 	return RelStr;
 }
 
-std::string FSpecialSymbolPreprocessor::DeteleSpecialSymbol(FString Text)
-{
-	std::string Str = TCHAR_TO_UTF8(*Text);
-	return DeteleSpecialSymbol(Str);
-}
-
-bool FSpecialSymbolPreprocessor::IsSpecialSymbol(char& Chr)
+bool FSpecialSymbolPreprocessor::IsSpecialSymbol(const char& Chr)
 {
 	for(BYTE sm : SpecialSymbols)
 	{
