@@ -39,6 +39,7 @@ bool FMathLogicAdapter::Process(const std::string& Input,std::string& Output)
 		if(MatchMathRegex(Words,Oai))
 		{
 			Output = OperationFormula(Words,Oai);
+			return true;
 		}
 		else
 		{
@@ -48,7 +49,28 @@ bool FMathLogicAdapter::Process(const std::string& Input,std::string& Output)
 	// 如果问题字符串包含中文又匹配数学算式，则进入中文+数学算式处理流
 	if(bContainChinese && bMatchRegex)
 	{
-		
+		std::string Formula;
+		// 当置信度大于等于可信度，则认为当前句子是数学问式
+		if(ConfideceLevel(Input,Words,Formula) >= Confidence)
+		{
+			std::vector<OpeAndInd> Oai;
+			std::vector<std::string> FormulaCut;
+			GlobalManager::jieba.Cut(Formula,FormulaCut);
+			if(MatchMathRegex(FormulaCut,Oai))
+			{
+				Output = OperationFormula(FormulaCut,Oai);
+				return true;
+			}
+			else
+			{
+				UE_LOG(LOGNLP,Error,TEXT("Error formula:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
 	}
 	UE_LOG(LOGNLP,Warning,TEXT("Flag9"));
 	return false;
@@ -136,16 +158,6 @@ std::string FMathLogicAdapter::FormatFloat(const std::string& Num)
 	return Rel;
 }
 
-/* 将多运算符算式拆分为单运算符算式，然后进行递归运算，拆分过程如下：
-* 1+1.2+2*4/2^2-2*2
-* 2^2=4 -> 1+1.2+2*4/4-2*2
-* 2*4=8 -> 1+1.2+8/4-2*2
-* 8/4=2 -> 1+1.2+2-2*2
-* 2*2=4 -> 1+1.2+2-4
-* 1+1.2=2.2 -> 2.2+2-4
-* 2.2+2=4.2 -> 4.2-4
-* 4.2-4=0.2 -> 0.2
-*/
 std::string FMathLogicAdapter::OperationFormula(std::vector<std::string> Words,std::vector<OpeAndInd> Oai)
 {
 	std::string Rel;
@@ -191,7 +203,262 @@ std::string FMathLogicAdapter::OperationFormula(std::vector<std::string> Words,s
 	return Rel;
 }
 
-bool FMathLogicAdapter::IsNumber(std::string Word)
+int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const std::vector<std::string>& Words,std::string& Formula)
 {
-	return false;
+	std::string LocalText = Text;
+	int Level = 0;
+	// 加载词典缓存
+	const std::string Path = GlobalManager::ResourcePath + MATHCONFIDEXELEVEL_DICT_PATH;
+	ifstream Ifs(Path.c_str());
+	check(Ifs.is_open())
+	std::string Line;
+	// 数学问式行字典
+	std::vector<std::string> LineDict;
+	// 数学问式关键词字典
+	std::set<std::string> KeyDict;
+	// 数学问式动词字典
+	std::set<std::string> VerbDict;
+	// 数学问式名词字典
+	std::set<std::string> NounDict;
+	
+	while(getline(Ifs,Line))
+	{
+		// 行提取
+		LineDict.push_back(Line);
+		// 关键词提取
+		std::vector<cppjieba::KeywordExtractor::Word> TempKeyWords;
+		GlobalManager::jieba.extractor.ExtractContainStopWord(Line,TempKeyWords,1);
+		if(TempKeyWords.size() != 0)
+		{
+			KeyDict.insert(TempKeyWords[0].word);
+		}
+		// 动词、名词、数词提取
+		for(std::string Tmp : LineDict)
+		{
+			vector<std::pair<std::string,std::string>> Tagers;
+			GlobalManager::jieba.Tag(Tmp,Tagers);
+			for(std::pair<std::string,std::string> Pair : Tagers)
+			{
+				if(Pair.second == "v")
+				{
+					VerbDict.insert(Pair.first);
+					continue;
+				}
+				if(Pair.second == "n")
+				{
+					NounDict.insert(Pair.first);
+					continue;
+				}
+			}
+		}
+	}
+	Ifs.close();
+	
+	// 使用代词X替换句子中数学算式或中文描述的数学算式子句
+	std::string MatchStr = GetBestMatchFormula(LocalText,LineDict,GetMatchFormulas(LocalText));;
+	if(MatchStr != "")
+	{
+		LocalText.replace(LocalText.rfind(MatchStr),MatchStr.length(),"X");
+		Formula = MatchStr;
+	}
+
+	// 子句匹配，寻找句子中是否存在与字典中预设问题完全匹配的子句，如果存在则置信度+1，否则-1，如果存在多个子句完全匹配的子句则取匹配度最长的
+	{
+		std::string MatchRel;
+		int MaxLen = 0;
+		for(std::string Str : LineDict)
+		{
+			std::string RelStr = RegexSubStringMatch(LocalText,Str);
+			if(RelStr.length() > MaxLen)
+			{
+				MaxLen = RelStr.length();
+				MatchRel = RelStr;
+			}
+		}
+		if(MaxLen != 0)
+		{
+			Level += 1;
+		}
+		else
+		{
+			Level -= 1;
+		}
+	}
+	// 关键词匹配，提取句子中权重最大的关键词，如果关键词存在于关键词词典中，则置信度+1，否者-1
+	{
+		std::vector<cppjieba::KeywordExtractor::Word> TempKeyWords;
+		GlobalManager::jieba.extractor.ExtractContainStopWord(Text,TempKeyWords,1);
+		if(TempKeyWords.size() != 0)
+		{
+			if(KeyDict.find(TempKeyWords[0].word) != KeyDict.end())
+			{
+				Level += 1;
+			}
+			else
+			{
+				Level -= 1;
+			}
+		}
+	}
+	
+	// 动词匹配，提取句子中的动词集合，如果动词集合与词典动词集合存在交集则置信度+1，否则+0
+	// 名词匹配，提取句子中的名词集合，如果名词集合与词典名词集合存在交集则置信度+1，否则+0
+	{
+		vector<std::pair<std::string,std::string>> Tagers;
+		GlobalManager::jieba.Tag(LocalText,Tagers);
+		bool bMatchVerb = false;
+		bool bMatchNoun = false;
+		bool bMatchNum = false;
+		for(std::pair<std::string,std::string> Pair : Tagers)
+		{
+			if(Pair.second == "v" && !bMatchVerb)
+			{
+				if(VerbDict.find(Pair.first) != VerbDict.end())
+				{
+					Level += 1;
+					bMatchVerb = true;
+				}
+			}
+			else if(Pair.second == "n" && !bMatchNoun)
+			{
+				if(NounDict.find(Pair.first) != NounDict.end())
+				{
+					Level += 1;
+					bMatchNoun = true;
+				}
+			}
+		}
+	}
+	
+	// 完全匹配，将替换后的句子与字典中的问式匹配，如果存在完全匹配项则置信度+2，否则+0
+	for (std::string Str : LineDict)
+	{
+		if (Str == LocalText)
+		{
+			Level += 2;
+		}
+	}
+	
+	// 最长子句匹配，寻找句子在字典中的最长子句，如果最长子句在字典中存在完全匹配项则置信度+0，否者-2
+	{
+		std::string MaxSubString;
+		for(std::string Str : LineDict)
+		{
+			std::string Tmp = GetMaxSubString(LocalText,Str);
+			if(Tmp.find("X") == string::npos)
+			{
+				continue;
+			}
+			if(MaxSubString.length() < Tmp.length())
+			{
+				MaxSubString = Tmp;
+			}
+		}
+		Level -= 2;
+		for(std::string Str : LineDict)
+		{
+			if(Str == MaxSubString)
+			{
+				Level += 2;
+				break;
+			}
+		}
+	}
+	return Level;	
+}
+
+std::string FMathLogicAdapter::RegexSubStringMatch(const std::string& Text,const std::string& MatchStr)
+{
+	std::regex Pattern(MatchStr);
+	std::smatch MatchRel;
+	std::regex_search(Text,MatchRel,Pattern);
+	if(MatchRel.length() != 0)
+	{
+		int MaxLen = 0;
+		std::string Rel;
+		for(std::string Tmp : MatchRel)
+		{
+			if(Tmp.length() > MaxLen)
+			{
+				MaxLen = Tmp.length();
+				Rel = Tmp;
+			}
+		}
+		return Rel;
+	}
+	return "";
+}
+
+std::string FMathLogicAdapter::GetMaxSubString(const std::string& Str1, const std::string& Str2)
+{
+	int Len1 = Str1.length();
+	int Len2 = Str2.length();
+	std::vector<std::vector<int>> dp(Len1+1,std::vector<int>(Len2+1,0));
+	int MaxLen = 0;
+	int EndIndex = 0;
+	for(int i=1;i<=Len1;++i)
+	{
+		for(int j=1;j<=Len2;++j)
+		{
+			if(Str1[i-1] == Str2[j-1])
+			{
+				dp[i][j] = dp[i-1][j-1]+1;
+				if(dp[i][j] > MaxLen)
+				{
+					MaxLen = dp[i][j];
+					EndIndex = i-1;
+				}
+			}
+			else
+			{
+				dp[i][j] = 0;
+			}
+		}
+	}
+	if(MaxLen == 0)
+	{
+		return "";
+	}
+	return Str1.substr(EndIndex-MaxLen+1,MaxLen);
+}
+
+std::vector<std::string> FMathLogicAdapter::GetMatchFormulas(std::string Text)
+{
+	std::vector<std::string> FormulaVec;
+	// 正则表达式规则说明：
+	// [\p{Han}]*：匹配任意汉字
+	// \s*：匹配任意数量的空格符
+	// (\d+\s*[\+\-\*/^]\s*) ：匹配任意运算符中间可间隔任意空格符
+	// \d+：匹配任意多个的数字组合
+	std::regex pattern(R"([\p{Han}]*\s*(\d+\s*[\+\-\*/^]\s*)+\d+\s*[\p{Han}]*)");
+	// 在文本中搜索匹配项
+	std::smatch Match;
+	 while (std::regex_search(Text, Match, pattern))
+	 {
+	 	FormulaVec.push_back(Match.str());
+	 	// 更新文本以继续搜索
+	 	Text = Match.suffix(); 
+	 }
+	return FormulaVec;
+}
+
+std::string FMathLogicAdapter::GetBestMatchFormula(const std::string& Text,const std::vector<std::string>& LineDict,const std::vector<std::string>& FormulaVec)
+{
+	std::string MatchRel;
+	int MaxLen = 0;
+	for(std::string Formula : FormulaVec)
+	{
+		std::string LocalText = Text;
+		LocalText.replace(LocalText.find(Formula),Formula.length(),"X");
+		for(std::string Line : LineDict)
+		{
+			std::string RelStr = RegexSubStringMatch(LocalText,Line);
+			if(RelStr.length() >= MaxLen)
+			{
+				MaxLen = RelStr.length();
+				MatchRel = Formula;
+			}
+		}
+	}
+	return MatchRel;
 }

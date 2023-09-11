@@ -100,10 +100,10 @@ FString ATActor::TestJiebaTag(FString Text)
 
 FString ATActor::TestJiebaExtract(FString Text)
 {
-	const size_t Topk = 5;
+	const size_t Topk = 1;
 	vector<cppjieba::KeywordExtractor::Word> KeyWords;
 	string Str = TCHAR_TO_UTF8(*Text);
-	GlobalManager::jieba.extractor.Extract(Str,KeyWords,Topk);
+	GlobalManager::jieba.extractor.ExtractContainStopWord(Str,KeyWords,Topk);
 	string Rel;
 	for(cppjieba::KeywordExtractor::Word KeyWord : KeyWords)
 	{
@@ -120,16 +120,18 @@ FString ATActor::TestJiebaExtract(FString Text)
 
 bool ATActor::RegexTest(FString Text)
 {
-	std::vector<std::string> Words;
-	GlobalManager::jieba.Cut(TCHAR_TO_UTF8(*Text),Words);
+
 	//针对数学算术式子的正则匹配
+	std::regex rp(R"((\d+\s*[\+\-\*/\^x]\s*)+\d+)");
+	std::string input = TCHAR_TO_UTF8(*Text);
+	std::smatch sm;
+	bool Rel = std::regex_search(input, sm, rp);
+	for (std::string t : sm)
 	{
-		//char* Chr = Words[0];
-		//std::isdigit(Words[0]);//传入char
-		std::regex rp(R"((\d+\s*[\+\-\*/\^x]\s*)+\d+)");
-		std::string input = TCHAR_TO_UTF8(*Text);
-		return std::regex_search(input,rp);
+		UE_LOG(LOGNLP, Log, TEXT("匹配的算式：%s"), *FString(UTF8_TO_TCHAR(t.c_str())));
 	}
+
+	return Rel;
 }
 
 FString ATActor::ComTest(FString Text)
@@ -137,15 +139,29 @@ FString ATActor::ComTest(FString Text)
 	FMathLogicAdapter* mla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FMathLogicAdapter>();
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
-	if(mla->Process(Input,Output))
-	{
-		return FString(UTF8_TO_TCHAR(Output.c_str()));
-	}
-	else
-	{
-		UE_LOG(LOGNLP,Error,TEXT("Process False"));
-		return "";
-	}
+
+	// 置信度
+	// std::vector<std::string> Words;
+	// GlobalManager::jieba.Cut(Input,Words);
+	// std::string Formula;
+	// int Level  = mla->ConfideceLevel(Input,Words,Formula);
+	
+	//return FString::FromInt(Level);
+
+
+	// Process
+	bool Rel = mla->Process(Input,Output);
+	FString Tmp = Rel?TEXT("True"):TEXT("False");
+	FString RelStr = Tmp + TEXT("   ") + FString(UTF8_TO_TCHAR(Output.c_str()));
+	return RelStr;
+
+	// 算式提取
+	// std::vector<std::string> Vec = mla->GetMatchFormulas(Input);
+	// for(std::string str : Vec)
+	// {
+	// 	UE_LOG(LOGNLP,Log,TEXT("算式：%s"),*FString(UTF8_TO_TCHAR(str.c_str())));
+	// }
+	// return "";
 }
 
 // Called every frame

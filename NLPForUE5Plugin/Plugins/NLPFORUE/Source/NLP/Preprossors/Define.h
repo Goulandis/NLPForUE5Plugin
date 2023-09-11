@@ -8,7 +8,7 @@ enum ELanguageType
 	zh_HK//繁体中文(香港)
 };
 
-const char* const COM_PATH = "NLPFORUE/Source/";
+const char* const SOURCE_PATH = "NLPFORUE/Source/";
 const char* const DICT_PATH = "cppjieba/dict/jieba.dict.utf8";
 const char* const HMM_PATH = "cppjieba/dict/hmm_model.utf8";
 const char* const USER_DICT_PATH = "cppjieba/dict/user.dict.utf8";

@@ -92,6 +92,45 @@ class KeywordExtractor {
     keywords.resize(topN);
   }
 
+  // 自定义函数  包含停用词的关键词提取
+  void ExtractContainStopWord(const string& sentence, vector<Word>& keywords, size_t topN) const {
+    vector<string> words;
+    segment_.Cut(sentence, words);
+
+    map<string, Word> wordmap;
+    size_t offset = 0;
+    for (size_t i = 0; i < words.size(); ++i) {
+      size_t t = offset;
+      offset += words[i].size();
+      if (IsSingleWord(words[i]))
+      {
+        continue;
+      }
+      wordmap[words[i]].offsets.push_back(t);
+      wordmap[words[i]].weight += 1.0;
+    }
+    if (offset != sentence.size()) {
+      XLOG(ERROR) << "words illegal";
+      return;
+    }
+
+    keywords.clear();
+    keywords.reserve(wordmap.size());
+    for (map<string, Word>::iterator itr = wordmap.begin(); itr != wordmap.end(); ++itr) {
+      unordered_map<string, double>::const_iterator cit = idfMap_.find(itr->first);
+      if (cit != idfMap_.end()) {
+        itr->second.weight *= cit->second;
+      } else {
+        itr->second.weight *= idfAverage_;
+      }
+      itr->second.word = itr->first;
+      keywords.push_back(itr->second);
+    }
+    topN = min(topN, keywords.size());
+    partial_sort(keywords.begin(), keywords.begin() + topN, keywords.end(), Compare);
+    keywords.resize(topN);
+  }
+
   // 自定义函数  暴露stopWords_变量
   unordered_set<string>& GetStopWords(){return stopWords_;}
   

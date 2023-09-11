@@ -3,17 +3,19 @@
 
 #include "cppjieba/Jieba.hpp"
 #include "NLP/Preprossors/Define.h"
+#include "NLP/LogicAdapters/Define.h"
 #include <regex>
 
 namespace GlobalManager
 {
+	const std::string ResourcePath = TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + RESOURCE_PATH));
 	// 结巴分词库全局实例
 	inline cppjieba::Jieba jieba(
-	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + COM_PATH + DICT_PATH)),
-	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + COM_PATH + HMM_PATH)),
-	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + COM_PATH + USER_DICT_PATH)),
-	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + COM_PATH + IDF_PATH)),
-	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + COM_PATH + STOP_WORD_PATH))
+	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + DICT_PATH)),
+	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + HMM_PATH)),
+	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + USER_DICT_PATH)),
+	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + IDF_PATH)),
+	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + STOP_WORD_PATH))
 	);
 
 	// 判断字符串是否匹配数学算式
