@@ -1,6 +1,7 @@
 ﻿#ifndef PRRPDEFINE
 #define PRRPDEFINE
-enum ELanguageType
+
+enum class ELanguageType
 {
 	None,
 	zh_CN,//简体中文
