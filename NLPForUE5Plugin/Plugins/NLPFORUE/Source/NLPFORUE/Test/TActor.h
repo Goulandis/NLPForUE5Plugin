@@ -36,6 +36,8 @@ protected:
 	FString TestJiebaExtract(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	bool RegexTest(FString Text);
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	bool IsNumber(FString NumStr);
 
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString ComTest(FString Text);

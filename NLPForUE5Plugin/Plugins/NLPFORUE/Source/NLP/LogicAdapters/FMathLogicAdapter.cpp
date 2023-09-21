@@ -1,6 +1,8 @@
 #include "FMathLogicAdapter.h"
 #include <algorithm>
 #include <fstream>
+
+#include "ClearReplacementShaders.h"
 #include "NLP/Common/LogDefine.h"
 #include "NLP/Common/GlobalManager.h"
 #include "NLP/Managers/FPreprocessorFactory.h"
@@ -8,6 +10,42 @@
 FMathLogicAdapter::FMathLogicAdapter()
 {
 	UE_LOG(LOGNLP,Log,TEXT("FMathLogicAdapter constructed"));
+	// 加载词典缓存
+	const std::string Path = GlobalManager::ResourcePath + MATHCONFIDEXELEVEL_DICT_PATH;
+	ifstream Ifs(Path.c_str());
+	check(Ifs.is_open())
+	std::string Line;
+	while(getline(Ifs,Line))
+	{
+		// 行提取
+		LineDict.push_back(Line);
+		// 关键词提取
+		std::vector<cppjieba::KeywordExtractor::Word> TempKeyWords;
+		GlobalManager::jieba.extractor.ExtractContainStopWord(Line,TempKeyWords,1);
+		if(TempKeyWords.size() != 0)
+		{
+			KeyDict.insert(TempKeyWords[0].word);
+		}
+		// 动词、名词、数词提取
+		for(std::string Tmp : LineDict)
+		{
+			vector<std::pair<std::string,std::string>> Tagers;
+			GlobalManager::jieba.Tag(Tmp,Tagers);
+			for(std::pair<std::string,std::string> Pair : Tagers)
+			{
+				if(Pair.second == "v")
+				{
+					VerbDict.insert(Pair.first);
+					continue;
+				}
+				if(Pair.second == "n")
+				{
+					NounDict.insert(Pair.first);
+				}
+			}
+		}
+	}
+	Ifs.close();
 }
 
 FMathLogicAdapter& FMathLogicAdapter::CreateInstance()
@@ -29,11 +67,17 @@ bool FMathLogicAdapter::Process(const std::string& Input,std::string& Output)
 	GlobalManager::jieba.Cut(Sentence,Words);
 	bool bContainChinese = GlobalManager::IsChinese(Sentence);
 	bool bMatchRegex = GlobalManager::RegexMathFormulas(Sentence);
-	bool bContianUnit = ContainUnit(Sentence);
 	bool bContainMathWord = ContainMathWord(Sentence);
+	//bool bContianUnit = ContainUnit(Sentence);
+
+	HandleType Type = HandleType::Formula;
+	if(!bContainChinese){Type = HandleType::Formula;}
+	else if(bContainChinese && bMatchRegex){Type = HandleType::FormulaAndChinese;}
+	else if(bContainChinese && !bMatchRegex && bContainMathWord){Type = HandleType::Chinese;}
+	//else if(bContainChinese && !bMatchRegex && bContainMathWord && bContianUnit){Type = HandleType::ChieseWithUnit;}
 	
 	// 如果问题字符串不包含中文字符，则进入数学算式处理流
-	if(!bContainChinese)
+	if(Type == HandleType::Formula)
 	{
 		std::vector<OpeAndInd> Oai;
 		if(MatchMathRegex(Words,Oai))
@@ -47,14 +91,14 @@ bool FMathLogicAdapter::Process(const std::string& Input,std::string& Output)
 		}
 	}
 	// 如果问题字符串包含中文又匹配数学算式，则进入中文+数学算式处理流
-	if(bContainChinese && bMatchRegex)
+	if(Type == HandleType::FormulaAndChinese)
 	{
-		std::string Formula;
 		// 当置信度大于等于可信度，则认为当前句子是数学问式
-		if(ConfideceLevel(Input,Words,Formula) >= Confidence)
+		if(ConfideceLevel(Input,Type) >= Confidence)
 		{
 			std::vector<OpeAndInd> Oai;
 			std::vector<std::string> FormulaCut;
+			std::string Formula = GetBestMatchFormula(Input,Type);
 			GlobalManager::jieba.Cut(Formula,FormulaCut);
 			if(MatchMathRegex(FormulaCut,Oai))
 			{
@@ -72,34 +116,41 @@ bool FMathLogicAdapter::Process(const std::string& Input,std::string& Output)
 			return false;
 		}
 	}
-	UE_LOG(LOGNLP,Warning,TEXT("Flag9"));
+	// 如果问题字符串包含中文且不匹配数学算式，则进入纯中文数学问题处理流
+	if(Type == HandleType::Chinese)
+	{
+		if(ConfideceLevel(Input,Type) >= Confidence)
+		{
+			std::string Formula = GetBestMatchFormula(Input,Type);
+			std::vector<std::pair<std::string,int64>> NumPair = ChineseNumToInt(SplitTextToNum(Formula));
+			for(std::pair<std::string,int64> Pai : NumPair)
+			{
+				Formula.replace(Formula.find(Pai.first),Pai.first.length(),std::to_string(Pai.second));
+			}
+			Output = OperationFormula(Formula);
+		}
+		
+	}
 	return false;
 }
 
-bool FMathLogicAdapter::ContainUnit(const std::string& Text)
-{
-	std::regex rp(R"(百|千|万|亿|兆|毫米|厘米|分米|米|克|千克|吨)");
-	for(size_t i=0;i<Text.size();++i)
-	{
-		if(GlobalManager::IsNumber(&Text[i]))
-		{
-			
-		}
-	}
-	
-	return std::regex_search(Text,rp);
-}
+// bool FMathLogicAdapter::ContainUnit(const std::string& Text)
+// {
+// 	std::regex Pattern(R"(百|千|万|亿|兆|毫米|厘米|分米|米|克|千克|吨)");
+// 	return std::regex_search(Text,Pattern);
+// }
 
 bool FMathLogicAdapter::ContainMathWord(const std::string& Text)
 {
-	return 0;
+	std::regex Pattern(MathWord);
+	return std::regex_search(Text,Pattern);
 }
 
 bool FMathLogicAdapter::MatchMathRegex(std::vector<std::string>& Words, std::vector<OpeAndInd>& Oai)
 {
-	std::string MatchStr = "+-*/^";
+	std::string MatchStr = "+-*/^%";
 	std::vector<std::string> Vec;
-	std::regex FormulaMatch(R"([\+\-\*/\^0-9])");
+	std::regex FormulaMatch(R"([\+\-\*/\^%0-9])");
 	bool Rel = false;
 	for(int i=0;i<Words.size();++i)
 	{
@@ -158,6 +209,28 @@ std::string FMathLogicAdapter::FormatFloat(const std::string& Num)
 	return Rel;
 }
 
+std::string FMathLogicAdapter::Keep2DecimalPlaces(std::string Num)
+{
+	if(!GlobalManager::IsNumber(Num))
+	{
+		UE_LOG(LOGNLP,Error,TEXT("Parameter Num is not number,Num:%s"),*FString(UTF8_TO_TCHAR(Num.c_str())));
+		return "";
+	}
+	std::size_t Pos = Num.find(".");
+	std::string Left,Right;
+	if(Pos != Num.npos)
+	{
+		Left = Num.substr(0,Pos);
+		Right = Num.substr(Pos+1,Num.size());
+	}
+	if(std::stoi(Right) == 0)
+	{
+		return Left;
+	}
+	std::string Float = Right.substr(0,2);
+	return Left+"."+Float;
+}
+
 std::string FMathLogicAdapter::OperationFormula(std::vector<std::string> Words,std::vector<OpeAndInd> Oai)
 {
 	std::string Rel;
@@ -174,7 +247,7 @@ std::string FMathLogicAdapter::OperationFormula(std::vector<std::string> Words,s
 		const char* TChar = Prefix.data();
 		std::string RelStr;
 		// 如果前后缀数字有一个是小数，则使用小数处理
-		if(IsFloat(Prefix) || IsFloat(Subfix))
+		if(IsFloat(Prefix) || IsFloat(Subfix) || Oai[0].Ope == "√")
 		{
 			float NumPrefix = std::stof(TChar);
 			TChar = Subfix.data();
@@ -203,65 +276,13 @@ std::string FMathLogicAdapter::OperationFormula(std::vector<std::string> Words,s
 	return Rel;
 }
 
-int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const std::vector<std::string>& Words,std::string& Formula)
+int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType& Type)
 {
 	std::string LocalText = Text;
+	UE_LOG(LOGNLP,Log,TEXT("Text：%s"),*DebugLog::Log(Text));
 	int Level = 0;
-	// 加载词典缓存
-	const std::string Path = GlobalManager::ResourcePath + MATHCONFIDEXELEVEL_DICT_PATH;
-	ifstream Ifs(Path.c_str());
-	check(Ifs.is_open())
-	std::string Line;
-	// 数学问式行字典
-	std::vector<std::string> LineDict;
-	// 数学问式关键词字典
-	std::set<std::string> KeyDict;
-	// 数学问式动词字典
-	std::set<std::string> VerbDict;
-	// 数学问式名词字典
-	std::set<std::string> NounDict;
-	
-	while(getline(Ifs,Line))
-	{
-		// 行提取
-		LineDict.push_back(Line);
-		// 关键词提取
-		std::vector<cppjieba::KeywordExtractor::Word> TempKeyWords;
-		GlobalManager::jieba.extractor.ExtractContainStopWord(Line,TempKeyWords,1);
-		if(TempKeyWords.size() != 0)
-		{
-			KeyDict.insert(TempKeyWords[0].word);
-		}
-		// 动词、名词、数词提取
-		for(std::string Tmp : LineDict)
-		{
-			vector<std::pair<std::string,std::string>> Tagers;
-			GlobalManager::jieba.Tag(Tmp,Tagers);
-			for(std::pair<std::string,std::string> Pair : Tagers)
-			{
-				if(Pair.second == "v")
-				{
-					VerbDict.insert(Pair.first);
-					continue;
-				}
-				if(Pair.second == "n")
-				{
-					NounDict.insert(Pair.first);
-					continue;
-				}
-			}
-		}
-	}
-	Ifs.close();
-	
-	// 使用代词X替换句子中数学算式或中文描述的数学算式子句
-	std::string MatchStr = GetBestMatchFormula(LocalText,LineDict,GetMatchFormulas(LocalText));;
-	if(MatchStr != "")
-	{
-		LocalText.replace(LocalText.rfind(MatchStr),MatchStr.length(),"X");
-		Formula = MatchStr;
-	}
-
+	LocalText = MathTextFormat(LocalText,Type);
+	UE_LOG(LOGNLP,Log,TEXT("LocalText：%s"),*DebugLog::Log(LocalText));
 	// 子句匹配，寻找句子中是否存在与字典中预设问题完全匹配的子句，如果存在则置信度+1，否则-1，如果存在多个子句完全匹配的子句则取匹配度最长的
 	{
 		std::string MatchRel;
@@ -278,25 +299,30 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const std::vector
 		if(MaxLen != 0)
 		{
 			Level += 1;
+			UE_LOG(LOGNLP,Log,TEXT("子句匹配成功，置信度+1，子句：%s"),*FString(UTF8_TO_TCHAR(MatchRel.c_str())));
 		}
 		else
 		{
 			Level -= 1;
+			UE_LOG(LOGNLP,Log,TEXT("子句匹配失败，置信度-1，子句：%s"),*FString(UTF8_TO_TCHAR(MatchRel.c_str())));
 		}
 	}
 	// 关键词匹配，提取句子中权重最大的关键词，如果关键词存在于关键词词典中，则置信度+1，否者-1
 	{
 		std::vector<cppjieba::KeywordExtractor::Word> TempKeyWords;
-		GlobalManager::jieba.extractor.ExtractContainStopWord(Text,TempKeyWords,1);
+		std::string LocalTextForExtract = KeyExtractClean(LocalText,Type);
+		GlobalManager::jieba.extractor.ExtractContainStopWord(LocalTextForExtract,TempKeyWords,1);
 		if(TempKeyWords.size() != 0)
 		{
 			if(KeyDict.find(TempKeyWords[0].word) != KeyDict.end())
 			{
 				Level += 1;
+				UE_LOG(LOGNLP,Log,TEXT("关键词匹配成功，置信度+1，关键词：%s"),*FString(UTF8_TO_TCHAR(TempKeyWords[0].word.c_str())));
 			}
 			else
 			{
 				Level -= 1;
+				UE_LOG(LOGNLP,Log,TEXT("关键词匹配失败，置信度-1，关键词：%s"),*FString(UTF8_TO_TCHAR(TempKeyWords[0].word.c_str())));
 			}
 		}
 	}
@@ -317,6 +343,7 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const std::vector
 				{
 					Level += 1;
 					bMatchVerb = true;
+					UE_LOG(LOGNLP,Log,TEXT("动词匹配成功，置信度+1，动词：%s"),*FString(UTF8_TO_TCHAR(Pair.first.c_str())));
 				}
 			}
 			else if(Pair.second == "n" && !bMatchNoun)
@@ -325,6 +352,7 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const std::vector
 				{
 					Level += 1;
 					bMatchNoun = true;
+					UE_LOG(LOGNLP,Log,TEXT("名词匹配成功，置信度+1，名词：%s"),*FString(UTF8_TO_TCHAR(Pair.first.c_str())));
 				}
 			}
 		}
@@ -336,15 +364,18 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const std::vector
 		if (Str == LocalText)
 		{
 			Level += 2;
+			UE_LOG(LOGNLP,Log,TEXT("完全匹配成功，置信度+2，匹配句子：%s"),*FString(UTF8_TO_TCHAR(Str.c_str())));
+			break;
 		}
 	}
 	
 	// 最长子句匹配，寻找句子在字典中的最长子句，如果最长子句在字典中存在完全匹配项则置信度+0，否者-2
 	{
 		std::string MaxSubString;
+		std::string LocalTextForExtract = KeyExtractClean(LocalText,Type);
 		for(std::string Str : LineDict)
 		{
-			std::string Tmp = GetMaxSubString(LocalText,Str);
+			std::string Tmp = GetMaxSubString(LocalTextForExtract,Str);
 			if(Tmp.find("X") == string::npos)
 			{
 				continue;
@@ -355,15 +386,26 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const std::vector
 			}
 		}
 		Level -= 2;
+		int Sub = 0;
 		for(std::string Str : LineDict)
 		{
 			if(Str == MaxSubString)
 			{
 				Level += 2;
+				Sub += 2;
 				break;
 			}
 		}
+		if(Sub == 0)
+		{
+			UE_LOG(LOGNLP,Log,TEXT("最长子句匹配失败，置信度-2，最长匹配句子：%s"),*FString(UTF8_TO_TCHAR(MaxSubString.c_str())));
+		}
+		else
+		{
+			UE_LOG(LOGNLP,Log,TEXT("最长子句匹配成功，置信度+0，最长匹配句子：%s"),*FString(UTF8_TO_TCHAR(MaxSubString.c_str())));
+		}
 	}
+	UE_LOG(LOGNLP,Log,TEXT("数学置信度:%d"),Level);
 	return Level;	
 }
 
@@ -442,23 +484,603 @@ std::vector<std::string> FMathLogicAdapter::GetMatchFormulas(std::string Text)
 	return FormulaVec;
 }
 
-std::string FMathLogicAdapter::GetBestMatchFormula(const std::string& Text,const std::vector<std::string>& LineDict,const std::vector<std::string>& FormulaVec)
+std::string FMathLogicAdapter::GetBestMatchFormula(const std::string& Text,const HandleType& Type)
 {
 	std::string MatchRel;
-	int MaxLen = 0;
-	for(std::string Formula : FormulaVec)
+	if(Type == HandleType::FormulaAndChinese)
 	{
-		std::string LocalText = Text;
-		LocalText.replace(LocalText.find(Formula),Formula.length(),"X");
-		for(std::string Line : LineDict)
+		int MaxLen = 0;
+		std::vector<std::string> FormulaVec = GetMatchFormulas(Text);
+		for(std::string Formula : FormulaVec)
 		{
-			std::string RelStr = RegexSubStringMatch(LocalText,Line);
-			if(RelStr.length() >= MaxLen)
+			std::string LocalText = Text;
+			LocalText.replace(LocalText.find(Formula),Formula.length(),ReplaceWord);
+			for(std::string Line : LineDict)
 			{
-				MaxLen = RelStr.length();
-				MatchRel = Formula;
+				std::string RelStr = RegexSubStringMatch(LocalText,Line);
+				if(RelStr.length() >= MaxLen)
+				{
+					MaxLen = RelStr.length();
+					MatchRel = Formula;
+				}
+			}
+		}
+	}
+	else if(Type == HandleType::Chinese)
+	{
+		std::vector<std::string> Words;
+		GlobalManager::jieba.Cut(Text,Words,false);
+		std::regex Pattren("(加|减|乘|除|加上|减去|乘以|除以|平方|二次幂|立方|三次幂|次方|平方根|立方根|和|的和|之和|差|的差|之差|"
+					 "积|的积|之积|商|的商|之商|对|求余|求的余数|开方|的|与)");
+		std::string Tmp;
+		for(int i=0;i<Words.size();++i)
+		{
+			if(GlobalManager::IsNumber(Words[i]) || std::regex_search(Words[i],Pattren))
+			{
+				Tmp += Words[i];
+				if(i == Words.size() - 1)
+				{
+					MatchRel = Tmp;
+				}
+			}
+			else
+			{
+				if(Tmp != "")
+				{
+					MatchRel = Tmp;
+				}
+				Tmp = "";
 			}
 		}
 	}
 	return MatchRel;
+}
+
+std::string FMathLogicAdapter::MathTextFormat(std::string Text,const HandleType Type)
+{
+	if(Type == HandleType::FormulaAndChinese)
+	{
+		std::string MatchStr = GetBestMatchFormula(Text,Type);
+		if(MatchStr != "")
+		{
+			Text.replace(Text.rfind(MatchStr),MatchStr.length(),ReplaceWord);
+			return Text;
+		}
+		return "";
+	}
+	else if(Type == HandleType::Chinese)
+	{
+		std::string ReplaceSource = GetBestMatchFormula(Text,Type);
+		Text.replace(Text.find(ReplaceSource),ReplaceSource.length(),ReplaceWord);
+		return Text;
+	}
+	return "";
+}
+
+std::string FMathLogicAdapter::FindFormulaDescription(const std::string& Text,std::vector<std::string>* FormulaVec)
+{
+	std::vector<std::string> Words;
+	GlobalManager::jieba.Cut(Text,Words);
+	std::regex Pattren("(加|减|乘|除|加上|减去|乘以|除以|平方|立方|次方|平方根|立方根|和|的和|之和|差|的差|之差|积|的积|之积|商|的商|之商|求余|开方)");
+	std::string Formula,Tmp;
+	for(std::string Word:Words)
+	{
+		if(GlobalManager::IsNumber(Word) || std::regex_search(Word,Pattren))
+		{
+			Tmp += Word;
+			//UE_LOG(LOGNLP,Log,TEXT("Tmp:%s"),*FString(UTF8_TO_TCHAR(Tmp.c_str())));
+		}
+		else
+		{
+			if(std::regex_search(Tmp,Pattren))
+			{
+				Formula = Tmp;
+				if(FormulaVec != nullptr)
+				{
+					FormulaVec->push_back(Formula);
+				}
+			}
+			Tmp = "";
+		}
+	}
+	return Formula;
+}
+
+std::vector<std::string> FMathLogicAdapter::SplitTextToWord(const std::string& Text)
+{
+	int Num = Text.size();
+	int i = 0;
+	std::vector<std::string> RelVec;
+	while(i < Num)
+	{
+		int size = 1;
+		if(Text[i] & 0x80)
+		{
+			char Chr = Text[i];
+			Chr <<= 1;
+			do
+			{
+				Chr <<= 1;
+				++size;
+			}
+			while (Chr & 0x80);
+		}
+		std::string Word = Text.substr(i,size);
+		RelVec.push_back(Word);
+		i += size;
+	}
+	return RelVec;
+}
+
+std::vector<std::string> FMathLogicAdapter::SplitTextToNum(const std::string& FormulaDescription)
+{
+	std::vector<std::string> WordVec = SplitTextToWord(FormulaDescription);
+	std::vector<std::string> NumVec;
+	std::string NumStr;
+	for(int i=0;i<WordVec.size();++i)
+	{
+		if(GlobalManager::IsNumber(WordVec[i]) || WordVec[i] == "点")
+		{
+			NumStr += WordVec[i];
+			if(i == WordVec.size() - 1)
+			{
+				NumVec.push_back(NumStr);
+				NumStr = "";
+			}
+		}
+		else
+		{
+			if(NumStr != "")
+			{
+				NumVec.push_back(NumStr);
+				NumStr = "";
+			}
+		}
+	}
+	return NumVec;
+}
+
+std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
+{
+	std::vector<std::string> PrePattrens = {
+		R"([-]?\d+加[-]?\d+的和|\d+加[-]?\d+之和|\d+加上[-]?\d+的和|\d+加上[-]?\d+之和|\d+和[-]?\d+的和|\d+和[-]?\d+之和|\d+与[-]?\d+的和|\d+与[-]?\d+之和)",
+		R"([-]?\d+减[-]?\d+的差|\d+减[-]?\d+之差|\d+减去[-]?\d+的差|\d+减去[-]?\d+之差|\d+和[-]?\d+的差|\d+和[-]?\d+之差|\d+与[-]?\d+的差|\d+与[-]?\d+之差)",
+		R"([-]?\d+乘[-]?\d+的积|\d+乘[-]?\d+之积|\d+乘以[-]?\d+的积|\d+乘以[-]?\d+之积|\d+和[-]?\d+的积|\d+和[-]?\d+之积|\d+与[-]?\d+的积|\d+与[-]?\d+之积)",
+		R"([-]?\d+除[-]?\d+的商|\d+除[-]?\d+之商|\d+除以[-]?\d+的商|\d+除以[-]?\d+之商|\d+和[-]?\d+的商|\d+和[-]?\d+之商|\d+与[-]?\d+的商|\d+与[-]?\d+之商)",
+		R"([-]?\d+的平方根)",
+		R"([-]?\d+的立方根)",
+		R"([-]?\d+的平方|\d+的二次幂)",
+		R"([-]?\d+的立方|\d+的三次幂)",
+		R"([-]?\d+对[-]?\d+求的余数)"
+	};
+	std::vector<std::string> OrdPattrens = {
+		R"([-]?\d+加[-]?\d+|\d+加上[-]?\d+)",
+		R"([-]?\d+减[-]?\d+|\d+减去[-]?\d+)",
+		R"([-]?\d+乘[-]?\d+|\d+乘以[-]?\d+)",
+		R"([-]?\d+除[-]?\d+|\d+除以[-]?\d+)",
+		R"([-]?\d+对[-]?\d+求余|\d+对[-]?\d+求余数)"
+	};
+
+	// 优先级计算，先计算满足可优先计算的算式，并将计算结果替换掉对应的文字描述
+	for(int i=0;i<PrePattrens.size();++i)
+	{
+		std::regex Pattren(PrePattrens[i]);
+		std::smatch Matchs;
+		std::regex_search(FormulaDescription,Matchs,Pattren);
+		if(Matchs.size() > 0)
+		{
+			for(std::string Formula : Matchs)
+			{
+				std::vector<std::string> Cut;
+				GlobalManager::jieba.Cut(Formula,Cut);
+				std::string Prefix="",Subfix="";
+				const char* TChar;
+				for (int j=0;j<Cut.size();++j)
+				{
+					if (GlobalManager::IsNumber(Cut[j]))
+					{
+						if (Prefix == "")
+						{
+							Prefix = Cut[j];
+							// 适配负数
+							if(j-1>=0)
+							{
+								if(Cut[j-1] == "-")
+								{
+									Prefix = "-"+Prefix;
+								}
+							}
+						}
+						else if (Subfix == "")
+						{
+							Subfix = Cut[j];
+							if(j-1>=0)
+							{
+								if(Cut[j-1] == "-")
+								{
+									Subfix = "-"+Subfix;
+								}
+							}
+						}
+					}
+				}
+				if(Prefix != "" && Subfix != "")
+				{
+					switch (i)
+					{
+					case 0:
+						{
+							TChar = Prefix.data();
+							int PrefixNum = std::stoi(TChar);
+							TChar = Subfix.data();
+							int SubfixNum = std::stoi(TChar);
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"+");
+							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
+							UE_LOG(LOGNLP,Log,TEXT("计算加法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 1:
+						{
+							TChar = Prefix.data();
+							int PrefixNum = std::stoi(TChar);
+							TChar = Subfix.data();
+							int SubfixNum = std::stoi(TChar);
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"-");
+							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
+							UE_LOG(LOGNLP,Log,TEXT("计算减法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 2:
+						{
+							TChar = Prefix.data();
+							int PrefixNum = std::stoi(TChar);
+							TChar = Subfix.data();
+							int SubfixNum = std::stoi(TChar);
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"*");
+							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
+							UE_LOG(LOGNLP,Log,TEXT("计算乘法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 3:
+						{
+							TChar = Prefix.data();
+							float PrefixNum = std::stof(TChar);
+							TChar = Subfix.data();
+							float SubfixNum = std::stof(TChar);
+							float RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"/");
+							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
+							UE_LOG(LOGNLP,Log,TEXT("计算除法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 8:
+						{
+							TChar = Prefix.data();
+							int PrefixNum = std::stoi(TChar);
+							TChar = Subfix.data();
+							int SubfixNum = std::stoi(TChar);
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"%");
+							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
+							UE_LOG(LOGNLP,Log,TEXT("计算求余，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					}
+				}
+				else if(Prefix != "" && Subfix == "")
+				{
+					switch (i)
+					{
+					case 4:
+						{
+							TChar = Prefix.data();
+							float SubfixNum = std::stof(TChar);
+							float PrefixNum = 2;
+							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "√");
+							std::string FormatNum = FormatFloat(std::to_string(RelNum));
+							std::string NumStr = Keep2DecimalPlaces(std::to_string(RelNum));
+							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),NumStr);
+							UE_LOG(LOGNLP, Log, TEXT("计算平方根，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 5:
+						{
+							TChar = Prefix.data();
+							float SubfixNum = std::stof(TChar);
+							float PrefixNum = 3;
+							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "√");
+							std::string NumStr = Keep2DecimalPlaces(std::to_string(RelNum));
+							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),NumStr);
+							UE_LOG(LOGNLP, Log, TEXT("计算立方根，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 6:
+						{
+							TChar = Prefix.data();
+							int PrefixNum = std::stoi(TChar);
+							int SubfixNum = 2;
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"^");
+							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
+							UE_LOG(LOGNLP,Log,TEXT("计算平方，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 7:
+						{
+							TChar = Prefix.data();
+							int PrefixNum = std::stoi(TChar);
+							int SubfixNum = 3;
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"^");
+							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
+							UE_LOG(LOGNLP,Log,TEXT("计算立方，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					}
+				}
+				UE_LOG(LOGNLP,Log,TEXT("FormulaDescription:%s"),*FString(UTF8_TO_TCHAR(FormulaDescription.c_str())));
+			}
+		}
+	}
+
+	// 剩下的只能顺序计算的描述，直接进行顺序计算，并将计算结果替换掉对应的文字描述
+	std::regex Pattren(R"([-]?\d+加[-]?\d+|[-]?\d+加上[-]?\d+|[-]?\d+减[-]?\d+|[-]?\d+减去[-]?\d+|[-]?\d+乘[-]?\d+|[-]?\d+乘以[-]?\d+|[-]?\d+除[-]?\d+|[-]?\d+除以[-]?\d+|[-]?\d+对[-]?\d+求余|[-]?\d+对[-]?\d+求余数)");
+	std::smatch Matchs;
+	while (std::regex_search(FormulaDescription, Matchs, Pattren))
+	{
+		if (Matchs.size() <= 0)
+		{
+			break;
+		}
+		std::string Formula = Matchs[0];
+		for (int i = 0; i < OrdPattrens.size(); ++i)
+		{
+			std::regex FormulaPattren(OrdPattrens[i]);
+			if (std::regex_search(Formula, FormulaPattren))
+			{
+				std::vector<std::string> Cut;
+				GlobalManager::jieba.Cut(Formula, Cut);
+				std::string Prefix = "", Subfix = "";
+				const char* TChar;
+				for (int j=0;j<Cut.size();++j)
+				{
+					if (GlobalManager::IsNumber(Cut[j]))
+					{
+						if (Prefix == "")
+						{
+							Prefix = Cut[j];
+							if(j-1>=0)
+							{
+								if(Cut[j-1] == "-")
+								{
+									Prefix = "-"+Prefix;
+								}
+							}
+						}
+						else if (Subfix == "")
+						{
+							Subfix = Cut[j];
+							if(j-1>=0)
+							{
+								if(Cut[j-1] == "-")
+								{
+									Subfix = "-"+Subfix;
+								}
+							}
+						}
+					}
+				}
+				UE_LOG(LOGNLP, Log, TEXT("Prefix:%s，Subfix:%s"), *DebugLog::Log(Prefix),*DebugLog::Log(Subfix));
+				if (Prefix != "" && Subfix != "")
+				{
+					switch (i)
+					{
+					case 0:
+						{
+							TChar = Prefix.data();
+							int PrefixNum = std::stoi(TChar);
+							TChar = Subfix.data();
+							int SubfixNum = std::stoi(TChar);
+							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "+");
+							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
+							                           std::to_string(RelNum));
+							UE_LOG(LOGNLP, Log, TEXT("计算加法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 1:
+						{
+							TChar = Prefix.data();
+							int PrefixNum = std::stoi(TChar);
+							TChar = Subfix.data();
+							int SubfixNum = std::stoi(TChar);
+							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "-");
+							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
+							                           std::to_string(RelNum));
+							UE_LOG(LOGNLP, Log, TEXT("计算减法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 2:
+						{
+							TChar = Prefix.data();
+							int PrefixNum = std::stoi(TChar);
+							TChar = Subfix.data();
+							int SubfixNum = std::stoi(TChar);
+							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "*");
+							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
+							                           std::to_string(RelNum));
+							UE_LOG(LOGNLP, Log, TEXT("计算乘法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 3:
+						{
+							TChar = Prefix.data();
+							float PrefixNum = std::stof(TChar);
+							TChar = Subfix.data();
+							float SubfixNum = std::stof(TChar);
+							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "/");
+							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
+							                           std::to_string(RelNum));
+							UE_LOG(LOGNLP, Log, TEXT("计算除法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					case 4:
+						{
+							TChar = Prefix.data();
+							int PrefixNum = std::stoi(TChar);
+							TChar = Subfix.data();
+							int SubfixNum = std::stoi(TChar);
+							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "%");
+							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
+							                           std::to_string(RelNum));
+							UE_LOG(LOGNLP, Log, TEXT("计算求余，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+						}
+						break;
+					}
+				}
+			}
+		}
+		UE_LOG(LOGNLP, Log, TEXT("FormulaDescription:%s"), *FString(UTF8_TO_TCHAR(FormulaDescription.c_str())));
+	}
+	// 排除中文算式描述提取时，部分提取词对最终答案的干扰
+	if(GlobalManager::IsChinese(FormulaDescription))
+	{
+		std::vector<std::string> Words;
+		GlobalManager::jieba.Cut(FormulaDescription,Words);
+		for(std::string Item : Words)
+		{
+			if(GlobalManager::IsNumber(Item))
+			{
+				FormulaDescription = Item;
+			}
+		}
+	}
+	return FormulaDescription;
+}
+
+std::vector<std::pair<std::string, int64>> FMathLogicAdapter::ChineseNumToInt(const std::vector<std::string>& NumVec)
+{
+	std::map<std::string,int> ChineseNumMap = {
+		{"零",0},{"一",1},{"二",2},{"两",2},{"三",3},{"四",4},{"五",5},{"六",6},{"七",7},{"八",8},{"九",9},
+		{"十",10},{"百",100},{"千",1000},{"万",10000},{"亿",100000000},
+		{"0",0},{"1",1},{"2",2},{"3",3},{"4",4},{"5",5},{"6",6},{"7",7},{"8",8},{"9",9},
+	};
+	std::vector<std::pair<std::string,int64>> PaiVec;
+	for(std::string Item : NumVec)
+	{
+		std::vector<std::string> SingleNumVec = SplitTextToWord(Item);
+		int64 Rel = 0,Tmp=0,HndMln=0,Float=0;
+		//std::string FNum = "";
+		int64 CurrDigit;
+		std::string Point = "";
+		for(std::string Word : SingleNumVec)
+		{
+			// if(Word == "点")
+			// {
+			// 	Point = Word;
+			// }
+			// if(Point != "")
+			// {
+			// 	if(ChineseNumMap.find(Word) == ChineseNumMap.end())
+			// 	{
+			// 		break;
+			// 	}
+			// 	FNum += std::to_string(ChineseNumMap[Word]);
+			// }
+			if(ChineseNumMap.find(Word) == ChineseNumMap.end())
+			{
+				break;
+			}
+			CurrDigit = ChineseNumMap[Word];
+			// 处理亿位数
+			if(CurrDigit == std::pow(10,8))
+			{
+				Rel += Tmp;
+				Rel *= CurrDigit;
+				HndMln = HndMln * std::pow(10,8) + Rel;
+				Rel = 0;
+				Tmp = 0;
+			}
+			// 处理万位数
+			else if(CurrDigit == pow(10,4))
+			{
+				Rel += Tmp;
+				Rel *= CurrDigit;
+				Tmp = 0;
+			}
+			// 处理千、百、十位数
+			else if(CurrDigit >= 10)
+			{
+				if(Tmp == 0)
+				{
+					Tmp = 1;
+				}
+				Rel = Rel + CurrDigit * Tmp;
+				Tmp = 0;
+			}
+			// 处理个位数
+			else
+			{
+				Tmp = Tmp * 10 + CurrDigit;
+			}
+		}
+		Rel += Tmp;
+		Rel += HndMln;
+		// if(FNum != "")
+		// {
+		// 	FNum = "0."+FNum;
+		// 	float Fl = std::stof(FNum);
+		// 	
+		// }
+		PaiVec.push_back(std::pair(Item,Rel));
+	}
+	return PaiVec;
+}
+
+std::string FMathLogicAdapter::KeyExtractClean(std::string Text,HandleType Type)
+{
+	if(Type == HandleType::FormulaAndChinese)
+	{
+		std::vector<std::string> WordVec;
+		GlobalManager::jieba.Cut(Text,WordVec);
+		std::string Formula = "";
+		for(std::string Word : WordVec)
+		{
+			if(!GlobalManager::IsChinese(Word))
+			{
+				Formula += Word;
+			}
+			else
+			{
+				if(Formula != "")
+				{
+					Text.replace(Text.find(Formula),Formula.length(),ReplaceWord);
+					Formula = "";
+				}
+			}
+		}
+	}
+	else if(Type == HandleType::Chinese)
+	{
+		std::vector<std::string> FormulaVec;
+		FindFormulaDescription(Text,&FormulaVec);
+		for(std::string FormulaDescription : FormulaVec)
+		{
+			Text.replace(Text.find(FormulaDescription),FormulaDescription.length(),ReplaceWord);
+		}
+		std::vector<std::string> WordVec;
+		GlobalManager::jieba.Cut(Text,WordVec);
+		std::string ReplaceStr = "";
+		for(std::string Word : WordVec)
+		{
+			if(GlobalManager::IsNumber(Word))
+			{
+				ReplaceStr += Word;
+			}
+			else
+			{
+				if(ReplaceStr != "")
+				{
+					Text.replace(Text.find(ReplaceStr),ReplaceStr.length(),ReplaceWord);
+					ReplaceStr = "";
+				}
+			}
+		}
+	}
+	return Text;
 }

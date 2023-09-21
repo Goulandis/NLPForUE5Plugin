@@ -21,14 +21,32 @@ namespace GlobalManager
 	// 判断字符串是否匹配数学算式
 	inline bool RegexMathFormulas(const std::string& Text)
 	{
-		std::regex rp(R"((\d+\s*[\+\-\*/\^x]\s*)+\d+)");
+		std::regex rp(R"((\d+\s*[\+\-\*/\^%]\s*)+\d+)");
 		return std::regex_search(Text,rp);
 	}
 
 	inline bool IsNumber(const std::string& Word)
 	{
-		std::regex rp(R"(0|1|2|3|4|5|6|7|8|8|零|一|二|三|四|五|六|七|八|九|十)");
-		return std::regex_match(Word,rp);
+		
+		//return std::regex_match(Word,rp);
+		std::vector<std::pair<std::string,std::string>> Tagers;
+		jieba.Tag(Word,Tagers);
+		bool Rel = false;
+		std::regex ExcPattren(R"(一下|一次|多少|余|二次|三次|几)");
+		std::regex NumPattren(R"(\d+)");
+		for(std::pair<std::string,std::string> Pai : Tagers)
+		{
+			if((Pai.second == "m" && !std::regex_search(Pai.first,ExcPattren)) || std::regex_search(Pai.first,NumPattren))
+			{
+				Rel = true;
+			}
+			else
+			{
+				Rel = false;
+				break;
+			}
+		}
+		return Rel;
 	}
 
 	inline bool IsChinese(const std::string& Text)
@@ -63,6 +81,11 @@ namespace DebugLog
 		{
 			UE_LOG(LogTemp,Log,TEXT("%s:%s"),*FString(UTF8_TO_TCHAR(Flag.c_str())),*FString(UTF8_TO_TCHAR(Vec[i].c_str())));
 		}
+	}
+
+	inline FString Log(const std::string& Str)
+	{
+		return FString(UTF8_TO_TCHAR(Str.c_str()));
 	}
 	
 }

@@ -25,14 +25,14 @@ TArray<FString> FPreprocessorModule::Handle(FString& Text) const
 	ELanguageType LType = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FLanguageJudgmentPreprocessor>()->GetLanguageType(TextLocal);
 	switch (LType)
 	{
-	case zh_CN:
+	case ELanguageType::zh_CN:
 		RelTmp = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSensitiveWordPreprocessor>()->SensitiveWordFiltering(TextLocal);
 		RelTmp = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSpecialSymbolPreprocessor>()->DeteleSpecialSymbol(RelTmp);
 		RelVec = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FStopWordFilteringPreprocessor>()->StopWordFiltering(RelTmp);
 		break;;
-	case zh_HK:
+	case ELanguageType::zh_HK:
 		break;
-	case en_US:
+	case ELanguageType::en_US:
 		break;
 	default:
 		break;
