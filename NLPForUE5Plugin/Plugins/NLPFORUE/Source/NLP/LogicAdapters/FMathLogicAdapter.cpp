@@ -1,8 +1,6 @@
 #include "FMathLogicAdapter.h"
 #include <algorithm>
 #include <fstream>
-
-#include "ClearReplacementShaders.h"
 #include "NLP/Common/LogDefine.h"
 #include "NLP/Common/GlobalManager.h"
 #include "NLP/Managers/FPreprocessorFactory.h"
@@ -99,6 +97,7 @@ bool FMathLogicAdapter::Process(const std::string& Input,std::string& Output)
 			std::vector<OpeAndInd> Oai;
 			std::vector<std::string> FormulaCut;
 			std::string Formula = GetBestMatchFormula(Input,Type);
+			UE_LOG(LOGNLP,Error,TEXT("最佳算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 			GlobalManager::jieba.Cut(Formula,FormulaCut);
 			if(MatchMathRegex(FormulaCut,Oai))
 			{
@@ -334,7 +333,7 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType&
 		GlobalManager::jieba.Tag(LocalText,Tagers);
 		bool bMatchVerb = false;
 		bool bMatchNoun = false;
-		bool bMatchNum = false;
+		//bool bMatchNum = false;
 		for(std::pair<std::string,std::string> Pair : Tagers)
 		{
 			if(Pair.second == "v" && !bMatchVerb)
@@ -642,6 +641,7 @@ std::vector<std::string> FMathLogicAdapter::SplitTextToNum(const std::string& Fo
 
 std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 {
+	UE_LOG(LOGNLP,Log,TEXT("FormulaDescription:%s"),*FString(UTF8_TO_TCHAR(FormulaDescription.c_str())));
 	std::vector<std::string> PrePattrens = {
 		R"([-]?\d+加[-]?\d+的和|\d+加[-]?\d+之和|\d+加上[-]?\d+的和|\d+加上[-]?\d+之和|\d+和[-]?\d+的和|\d+和[-]?\d+之和|\d+与[-]?\d+的和|\d+与[-]?\d+之和)",
 		R"([-]?\d+减[-]?\d+的差|\d+减[-]?\d+之差|\d+减去[-]?\d+的差|\d+减去[-]?\d+之差|\d+和[-]?\d+的差|\d+和[-]?\d+之差|\d+与[-]?\d+的差|\d+与[-]?\d+之差)",
@@ -970,18 +970,6 @@ std::vector<std::pair<std::string, int64>> FMathLogicAdapter::ChineseNumToInt(co
 		std::string Point = "";
 		for(std::string Word : SingleNumVec)
 		{
-			// if(Word == "点")
-			// {
-			// 	Point = Word;
-			// }
-			// if(Point != "")
-			// {
-			// 	if(ChineseNumMap.find(Word) == ChineseNumMap.end())
-			// 	{
-			// 		break;
-			// 	}
-			// 	FNum += std::to_string(ChineseNumMap[Word]);
-			// }
 			if(ChineseNumMap.find(Word) == ChineseNumMap.end())
 			{
 				break;
@@ -1021,12 +1009,6 @@ std::vector<std::pair<std::string, int64>> FMathLogicAdapter::ChineseNumToInt(co
 		}
 		Rel += Tmp;
 		Rel += HndMln;
-		// if(FNum != "")
-		// {
-		// 	FNum = "0."+FNum;
-		// 	float Fl = std::stof(FNum);
-		// 	
-		// }
 		PaiVec.push_back(std::pair(Item,Rel));
 	}
 	return PaiVec;

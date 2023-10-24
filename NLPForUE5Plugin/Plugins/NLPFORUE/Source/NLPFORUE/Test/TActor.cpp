@@ -1,7 +1,6 @@
 #include "TActor.h"
 #include "NLPFORUE/Common/FDefine.h"
 #include "NLP/Common/LogDefine.h"
-#include "NLP/Managers/FLogicAdapterFactory.h"
 #include "NLP/Common/GlobalManager.h"
 #include <regex>
 
@@ -12,6 +11,7 @@ ATActor::ATActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	mla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FMathLogicAdapter>();
 }
 
 ATActor::~ATActor()
@@ -192,22 +192,25 @@ bool ATActor::IsNumber(FString NumStr)
 	return GlobalManager::IsNumber(Str);
 }
 
+FString ATActor::MathLogicAdapter(FString Question)
+{
+	std::string Input = TCHAR_TO_UTF8(*Question);
+	std::string Output;
+	mla->Process(Input,Output);
+	return FString(UTF8_TO_TCHAR(Output.c_str()));
+}
+
 FString ATActor::ComTest(FString Text)
 {
-	
-	FMathLogicAdapter* mla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FMathLogicAdapter>();
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
 	mla->Process(Input,Output);
-	// std::regex Pattren(R"([-]?\d+加\d+|\d+加上\d+|\d+减\d+|\d+减去\d+|\d+乘\d+|\d+乘以\d+|\d+除\d+|\d+除以\d+|\d+对\d+求余|\d+对\d+求余数)");
-	// std::smatch Matchs;
-	// std::regex_search(Input,Matchs,Pattren);
-	// for(std::string Str : Matchs)
-	// {
-	// 	UE_LOG(LOGNLP,Log,TEXT("%s"),*FString(UTF8_TO_TCHAR(Str.c_str())));
-	// }
-
+	//[-]?\d+乘以[-]?\d+
+	//[-]?\d+除以[-]?\d+
+	//std::regex Pattren(R"([-]?\d+加[-]?\d+|[-]?\d+加上[-]?\d+|[-]?\d+减[-]?\d+|[-]?\d+减去[-]?\d+|[-]?\d+乘[-]?\d+|[-]?\d+乘以[-]?\d+|[-]?\d+除[-]?\d+|[-]?\d+除以[-]?\d+|[-]?\d+对[-]?\d+求余|[-]?\d+对[-]?\d+求余数)");
+	//std::regex Pattren(R"([-]?\d+乘以[-]?\d+)");
+	//Output = std::regex_search(Input,Pattren)?"True":"False";
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;
 }

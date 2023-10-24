@@ -2,6 +2,7 @@
 
 #pragma once
 #include "NLP/Modules/FPreprocessorModule.h"
+#include "NLP/Managers/FLogicAdapterFactory.h"
 #include "cppjieba/Jieba.hpp"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -38,6 +39,8 @@ protected:
 	bool RegexTest(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	bool IsNumber(FString NumStr);
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	FString MathLogicAdapter(FString Question);
 
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString ComTest(FString Text);
@@ -47,4 +50,5 @@ public:
 
 private:
 	TSharedPtr<FPreprocessorModule> MPrep;
+	FMathLogicAdapter* mla;
 };
