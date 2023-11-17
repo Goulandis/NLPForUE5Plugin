@@ -1,7 +1,5 @@
 #pragma once
 #include <regex>
-#include <vector>
-#include <string>
 #include <math.h>
 #include <set>
 #include "FLogicAdapter.h"
@@ -25,6 +23,7 @@ enum class HandleType
 };
 
 // 数学逻辑适配器，处理数学相关的问题
+// 暂不支持负数计算、中文小数计算、数值超过十亿的计算、带括号的算式计算、带除+-*/%√以外的数学符号的算式计算
 class NLP_API FMathLogicAdapter : public FLogicAdapter
 {
 public:

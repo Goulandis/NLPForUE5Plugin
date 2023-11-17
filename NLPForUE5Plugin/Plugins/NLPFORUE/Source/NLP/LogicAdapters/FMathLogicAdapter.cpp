@@ -11,7 +11,7 @@ FMathLogicAdapter::FMathLogicAdapter()
 	// 加载词典缓存
 	const std::string Path = GlobalManager::ResourcePath + MATHCONFIDEXELEVEL_DICT_PATH;
 	ifstream Ifs(Path.c_str());
-	check(Ifs.is_open())
+	check(Ifs.is_open());
 	std::string Line;
 	while(getline(Ifs,Line))
 	{
@@ -97,7 +97,6 @@ bool FMathLogicAdapter::Process(const std::string& Input,std::string& Output)
 			std::vector<OpeAndInd> Oai;
 			std::vector<std::string> FormulaCut;
 			std::string Formula = GetBestMatchFormula(Input,Type);
-			UE_LOG(LOGNLP,Error,TEXT("最佳算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 			GlobalManager::jieba.Cut(Formula,FormulaCut);
 			if(MatchMathRegex(FormulaCut,Oai))
 			{

@@ -3,6 +3,8 @@
 #include "NLP/Common/LogDefine.h"
 #include "NLP/Common/GlobalManager.h"
 #include <regex>
+#include <stdlib.h>
+#include<iostream>
 
 DEFINE_LOG_CATEGORY(LOGNLP);
 
@@ -12,6 +14,7 @@ ATActor::ATActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	mla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FMathLogicAdapter>();
+	wla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FWeatherLogicAdapter>();
 }
 
 ATActor::~ATActor()
@@ -205,12 +208,10 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	mla->Process(Input,Output);
-	//[-]?\d+乘以[-]?\d+
-	//[-]?\d+除以[-]?\d+
-	//std::regex Pattren(R"([-]?\d+加[-]?\d+|[-]?\d+加上[-]?\d+|[-]?\d+减[-]?\d+|[-]?\d+减去[-]?\d+|[-]?\d+乘[-]?\d+|[-]?\d+乘以[-]?\d+|[-]?\d+除[-]?\d+|[-]?\d+除以[-]?\d+|[-]?\d+对[-]?\d+求余|[-]?\d+对[-]?\d+求余数)");
-	//std::regex Pattren(R"([-]?\d+乘以[-]?\d+)");
-	//Output = std::regex_search(Input,Pattren)?"True":"False";
+	std::tm Now = GlobalManager::GetNowLocalTime();
+	wla->FormatDate(Now,Input);
+	Output = Input;
+	
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;
 }
