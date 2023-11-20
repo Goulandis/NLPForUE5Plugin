@@ -3,10 +3,26 @@
 #include "NLP/Common/LogDefine.h"
 #include "NLP/Common/GlobalManager.h"
 #include <regex>
-#include <stdlib.h>
-#include<iostream>
 
 DEFINE_LOG_CATEGORY(LOGNLP);
+
+FString ATActor::ComTest(FString Text)
+{
+	std::string Input = TCHAR_TO_UTF8(*Text);
+	std::string Output;
+
+	//std::regex P(R"(\d+年\b(?:[1-9]|1[0-2])\b月\b(?:[1-9]|1\d|2[0-9]|3[0-1])\b日|\d+年\b(?:[1-9]|1[0-2])\b月\b(?:[1-9]|1\d|2[0-9]|3[0-1])\b号)");
+	//std::regex P(R"([零一二三四五六七八九]+年(?:[一二三四五六七八九]|十[一二])月(?:[一二三四五六七八九]|十[一二三四五六七八九]|二十[零一二三四五六七八九]|三十[一])日|[零一二三四五六七八九]+年(?:[一二三四五六七八九]|十[一二])月(?:[一二三四五六七八九]|十[一二三四五六七八九]|二十[零一二三四五六七八九]|三十[一])号)");
+	std::regex P(R"([零一二三四五六七八九]+年[零一二三四五六七八九十]+月[零一二三四五六七八九十]+日|[零一二三四五六七八九]+年[零一二三四五六七八九十]+月[零一二三四五六七八九十]+号)");
+	std::smatch Matchs;
+	std::regex_search(Input,Matchs,P);
+	if(Matchs.size() > 0)
+	{
+		Output = Matchs[0];
+	}
+	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
+	return Rel;
+}
 
 // Sets default values
 ATActor::ATActor()
@@ -201,19 +217,6 @@ FString ATActor::MathLogicAdapter(FString Question)
 	std::string Output;
 	mla->Process(Input,Output);
 	return FString(UTF8_TO_TCHAR(Output.c_str()));
-}
-
-FString ATActor::ComTest(FString Text)
-{
-	std::string Input = TCHAR_TO_UTF8(*Text);
-	std::string Output;
-
-	std::tm Now = GlobalManager::GetNowLocalTime();
-	wla->FormatDate(Now,Input);
-	Output = Input;
-	
-	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
-	return Rel;
 }
 
 // Called every frame

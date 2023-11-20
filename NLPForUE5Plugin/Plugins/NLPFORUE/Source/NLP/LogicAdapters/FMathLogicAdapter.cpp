@@ -146,9 +146,14 @@ bool FMathLogicAdapter::ContainMathWord(const std::string& Text)
 
 bool FMathLogicAdapter::MatchMathRegex(std::vector<std::string>& Words, std::vector<OpeAndInd>& Oai)
 {
-	std::string MatchStr = "+-*/^%";
+	std::string MatchStr = "+-*/^%√";
 	std::vector<std::string> Vec;
 	std::regex FormulaMatch(R"([\+\-\*/\^%0-9])");
+	std::map<std::string,GlobalManager::OpeTag> OpeMap = {
+		{"+",GlobalManager::OpeTag::Add},{"-",GlobalManager::OpeTag::Sub},{"*",GlobalManager::OpeTag::Mul},
+		{"/",GlobalManager::OpeTag::Div},{"%",GlobalManager::OpeTag::Rem},{"^",GlobalManager::OpeTag::Pow},
+		{"√",GlobalManager::OpeTag::Rot}
+	};
 	bool Rel = false;
 	for(int i=0;i<Words.size();++i)
 	{
@@ -165,12 +170,17 @@ bool FMathLogicAdapter::MatchMathRegex(std::vector<std::string>& Words, std::vec
 		if(MatchStr.find(Words[i]) != std::string::npos)
 		{
 			OpeAndInd Tmp;
-			Tmp.Ope = Words[i];
+			//Tmp.Ope = Words[i];
+			Tmp.Ope = OpeMap[Words[i]];
 			Tmp.Ind = i;
 			// 设置算式运算符的运算优先级，^优先级为3，*和/优先级为2，+和—优先级为1
-			if(Words[i] == "+" || Words[i] == "-"){Tmp.Ord = 1;}
-			else if(Words[i] == "*" || Words[i] == "/"){Tmp.Ord = 2;}
-			else if(Words[i] == "^"){Tmp.Ord = 3;}
+			// if(Words[i] == "+" || Words[i] == "-"){Tmp.Ord = 1;}
+			// else if(Words[i] == "*" || Words[i] == "/"){Tmp.Ord = 2;}
+			// else if(Words[i] == "^" ){Tmp.Ord = 3;}
+			if(Tmp.Ope == GlobalManager::OpeTag::Add || Tmp.Ope == GlobalManager::OpeTag::Sub){Tmp.Ord = 1;}
+			else if(Tmp.Ope == GlobalManager::OpeTag::Mul || Tmp.Ope == GlobalManager::OpeTag::Div){Tmp.Ord = 2;}
+			else if(Tmp.Ope == GlobalManager::OpeTag::Pow || Tmp.Ope == GlobalManager::OpeTag::Rot){Tmp.Ord = 3;}
+			
 			Oai.push_back(Tmp);
 			Rel = true;
 		}
@@ -245,7 +255,7 @@ std::string FMathLogicAdapter::OperationFormula(std::vector<std::string> Words,s
 		const char* TChar = Prefix.data();
 		std::string RelStr;
 		// 如果前后缀数字有一个是小数，则使用小数处理
-		if(IsFloat(Prefix) || IsFloat(Subfix) || Oai[0].Ope == "√")
+		if(IsFloat(Prefix) || IsFloat(Subfix) || Oai[0].Ope == GlobalManager::OpeTag::Rot)
 		{
 			float NumPrefix = std::stof(TChar);
 			TChar = Subfix.data();
@@ -277,10 +287,8 @@ std::string FMathLogicAdapter::OperationFormula(std::vector<std::string> Words,s
 int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType& Type)
 {
 	std::string LocalText = Text;
-	UE_LOG(LOGNLP,Log,TEXT("Text：%s"),*DebugLog::Log(Text));
 	int Level = 0;
 	LocalText = MathTextFormat(LocalText,Type);
-	UE_LOG(LOGNLP,Log,TEXT("LocalText：%s"),*DebugLog::Log(LocalText));
 	// 子句匹配，寻找句子中是否存在与字典中预设问题完全匹配的子句，如果存在则置信度+1，否则-1，如果存在多个子句完全匹配的子句则取匹配度最长的
 	{
 		std::string MatchRel;
@@ -403,7 +411,6 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType&
 			UE_LOG(LOGNLP,Log,TEXT("最长子句匹配成功，置信度+0，最长匹配句子：%s"),*FString(UTF8_TO_TCHAR(MaxSubString.c_str())));
 		}
 	}
-	UE_LOG(LOGNLP,Log,TEXT("数学置信度:%d"),Level);
 	return Level;	
 }
 
@@ -584,35 +591,9 @@ std::string FMathLogicAdapter::FindFormulaDescription(const std::string& Text,st
 	return Formula;
 }
 
-std::vector<std::string> FMathLogicAdapter::SplitTextToWord(const std::string& Text)
-{
-	int Num = Text.size();
-	int i = 0;
-	std::vector<std::string> RelVec;
-	while(i < Num)
-	{
-		int size = 1;
-		if(Text[i] & 0x80)
-		{
-			char Chr = Text[i];
-			Chr <<= 1;
-			do
-			{
-				Chr <<= 1;
-				++size;
-			}
-			while (Chr & 0x80);
-		}
-		std::string Word = Text.substr(i,size);
-		RelVec.push_back(Word);
-		i += size;
-	}
-	return RelVec;
-}
-
 std::vector<std::string> FMathLogicAdapter::SplitTextToNum(const std::string& FormulaDescription)
 {
-	std::vector<std::string> WordVec = SplitTextToWord(FormulaDescription);
+	std::vector<std::string> WordVec = GlobalManager::SplitTextToWord(FormulaDescription);
 	std::vector<std::string> NumVec;
 	std::string NumStr;
 	for(int i=0;i<WordVec.size();++i)
@@ -713,7 +694,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int PrefixNum = std::stoi(TChar);
 							TChar = Subfix.data();
 							int SubfixNum = std::stoi(TChar);
-							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"+");
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Add);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
 							UE_LOG(LOGNLP,Log,TEXT("计算加法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
@@ -724,7 +705,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int PrefixNum = std::stoi(TChar);
 							TChar = Subfix.data();
 							int SubfixNum = std::stoi(TChar);
-							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"-");
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Sub);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
 							UE_LOG(LOGNLP,Log,TEXT("计算减法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
@@ -735,7 +716,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int PrefixNum = std::stoi(TChar);
 							TChar = Subfix.data();
 							int SubfixNum = std::stoi(TChar);
-							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"*");
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Mul);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
 							UE_LOG(LOGNLP,Log,TEXT("计算乘法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
@@ -746,7 +727,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							float PrefixNum = std::stof(TChar);
 							TChar = Subfix.data();
 							float SubfixNum = std::stof(TChar);
-							float RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"/");
+							float RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Div);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
 							UE_LOG(LOGNLP,Log,TEXT("计算除法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
@@ -757,7 +738,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int PrefixNum = std::stoi(TChar);
 							TChar = Subfix.data();
 							int SubfixNum = std::stoi(TChar);
-							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"%");
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Rem);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
 							UE_LOG(LOGNLP,Log,TEXT("计算求余，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
@@ -773,7 +754,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							TChar = Prefix.data();
 							float SubfixNum = std::stof(TChar);
 							float PrefixNum = 2;
-							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "√");
+							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Rot);
 							std::string FormatNum = FormatFloat(std::to_string(RelNum));
 							std::string NumStr = Keep2DecimalPlaces(std::to_string(RelNum));
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),NumStr);
@@ -785,7 +766,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							TChar = Prefix.data();
 							float SubfixNum = std::stof(TChar);
 							float PrefixNum = 3;
-							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "√");
+							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Rot);
 							std::string NumStr = Keep2DecimalPlaces(std::to_string(RelNum));
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),NumStr);
 							UE_LOG(LOGNLP, Log, TEXT("计算立方根，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
@@ -796,7 +777,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							TChar = Prefix.data();
 							int PrefixNum = std::stoi(TChar);
 							int SubfixNum = 2;
-							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"^");
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Pow);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
 							UE_LOG(LOGNLP,Log,TEXT("计算平方，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
@@ -806,7 +787,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							TChar = Prefix.data();
 							int PrefixNum = std::stoi(TChar);
 							int SubfixNum = 3;
-							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,"^");
+							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Pow);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
 							UE_LOG(LOGNLP,Log,TEXT("计算立方，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
@@ -865,7 +846,6 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 						}
 					}
 				}
-				UE_LOG(LOGNLP, Log, TEXT("Prefix:%s，Subfix:%s"), *DebugLog::Log(Prefix),*DebugLog::Log(Subfix));
 				if (Prefix != "" && Subfix != "")
 				{
 					switch (i)
@@ -876,7 +856,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int PrefixNum = std::stoi(TChar);
 							TChar = Subfix.data();
 							int SubfixNum = std::stoi(TChar);
-							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "+");
+							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Add);
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
 							                           std::to_string(RelNum));
 							UE_LOG(LOGNLP, Log, TEXT("计算加法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
@@ -888,7 +868,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int PrefixNum = std::stoi(TChar);
 							TChar = Subfix.data();
 							int SubfixNum = std::stoi(TChar);
-							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "-");
+							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Sub);
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
 							                           std::to_string(RelNum));
 							UE_LOG(LOGNLP, Log, TEXT("计算减法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
@@ -900,7 +880,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int PrefixNum = std::stoi(TChar);
 							TChar = Subfix.data();
 							int SubfixNum = std::stoi(TChar);
-							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "*");
+							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Mul);
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
 							                           std::to_string(RelNum));
 							UE_LOG(LOGNLP, Log, TEXT("计算乘法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
@@ -912,7 +892,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							float PrefixNum = std::stof(TChar);
 							TChar = Subfix.data();
 							float SubfixNum = std::stof(TChar);
-							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "/");
+							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Div);
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
 							                           std::to_string(RelNum));
 							UE_LOG(LOGNLP, Log, TEXT("计算除法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
@@ -924,7 +904,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int PrefixNum = std::stoi(TChar);
 							TChar = Subfix.data();
 							int SubfixNum = std::stoi(TChar);
-							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, "%");
+							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Rem);
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
 							                           std::to_string(RelNum));
 							UE_LOG(LOGNLP, Log, TEXT("计算求余，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
@@ -962,7 +942,7 @@ std::vector<std::pair<std::string, int64>> FMathLogicAdapter::ChineseNumToInt(co
 	std::vector<std::pair<std::string,int64>> PaiVec;
 	for(std::string Item : NumVec)
 	{
-		std::vector<std::string> SingleNumVec = SplitTextToWord(Item);
+		std::vector<std::string> SingleNumVec = GlobalManager::SplitTextToWord(Item);
 		int64 Rel = 0,Tmp=0,HndMln=0,Float=0;
 		//std::string FNum = "";
 		int64 CurrDigit;

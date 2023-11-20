@@ -1,9 +1,12 @@
 ﻿#ifndef GLOBALMANAGER
 #define GLOBALMANAGER
 
+#define TOFSTR(Str) FString(UTF8_TO_TCHAR(Str.c_str())) 
+
 #include "cppjieba/Jieba.hpp"
 #include "NLP/Preprossors/Define.h"
 #include "NLP/LogicAdapters/Define.h"
+#include "LogDefine.h"
 #include <regex>
 #include <time.h>
 
@@ -27,17 +30,20 @@ namespace DebugLog
 
 namespace GlobalManager
 {
+	// 算式标识
 	enum class OpeTag
 	{
-		Add,//加法
-		Sub,//减法
-		Mul,//乘法
-		Div,//除法
-		Rem,//求余
-		Squ,//平方
-		Cub,//立方
-		Squr,//平方根
-		Cubr,//立方根
+		Add,// 加法
+		Sub,// 减法
+		Mul,// 乘法
+		Div,// 除法
+		Rem,// 求余
+		Squ,// 平方
+		Cub,// 立方
+		Squr,// 平方根
+		Cubr,// 立方根
+		Pow,// 求幂
+		Rot,// 取根
 	};
 	
 	const std::string ResourcePath = TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + RESOURCE_PATH));
@@ -114,11 +120,9 @@ namespace GlobalManager
 		}
 		return LineVec;
 	}
-
 	inline std::tm TimeOperator(const std::tm& Time1,const std::tm& Time2,const OpeTag Ope = OpeTag::Add)
 	{
 		std::tm RelTime = {0};
-		bool bSec = false,bMin = false,bHour = false,bDay = false,bMon = false;
 		std::map<int,int> MonMap = {
 			{1,31},{3,31},{4,30},{5,31},{6,30},{7,31},{8,31},{9,30},{10,31},{11,30},{12,31}
 		};
@@ -147,63 +151,106 @@ namespace GlobalManager
 				MonMap.insert(std::pair<int,int>(2,28));
 			}
 		}
-		
+
+		int Sec=0,Min=0,Hour=0,Day=0,Mon=0,Year=0;
+		bool bSec = false,bMin = false,bHour = false,bDay = false,bMon = false;
 		if(Ope == OpeTag::Add)
 		{
-			int Sec = Time1.tm_sec + Time2.tm_sec;
+			Sec = Time1.tm_sec + Time2.tm_sec;
 			if(Sec >= 60)
 			{
 				Sec -= 60;
 				bSec = true;
 			}
-			int Min = Time1.tm_min + Time2.tm_min;
+			Min = Time1.tm_min + Time2.tm_min;
 			if(bSec){Min += 1;bSec=false;}
 			if(Min >= 60)
 			{
 				Min -= 60;
 				bMin = true;
 			}
-			int Hour = Time1.tm_hour + Time2.tm_hour;
+			Hour = Time1.tm_hour + Time2.tm_hour;
 			if(bMin){Hour+=1;bMin=false;}
 			if(Hour >= 24)
 			{
 				Hour -= 24;
 				bHour = true;
 			}
-			int Day = Time1.tm_mday + Time2.tm_mday;
+			Day = Time1.tm_mday + Time2.tm_mday;
 			if(bHour){Day+=1;bHour=false;}
 			if(Day>=MonMap[Time1.tm_mon])
 			{
 				Day -= MonMap[Time1.tm_mon];
 				bDay = true;
 			}
-			int Mon = Time1.tm_mon + Time2.tm_mon;
+			Mon = Time1.tm_mon + Time2.tm_mon;
 			if(bDay){Mon+=1;bDay=false;}
 			if(Mon >= 12)
 			{
 				Mon -= 12;
 				bMon = true;
 			}
-			int Year = Time1.tm_year + Time2.tm_year;
+			Year = Time1.tm_year + Time2.tm_year;
 			if(bMon){Year+=1;bMon=false;}
-			RelTime.tm_year = Year;
-			RelTime.tm_mon = Mon;
-			RelTime.tm_mday = Day;
-			RelTime.tm_hour = Hour;
-			RelTime.tm_min = Min;
-			RelTime.tm_sec = Sec;
-			return RelTime;
 		}
 		if(Ope == OpeTag::Sub)
 		{
-			int Sec = Time1.tm_sec - Time2.tm_sec;
+			Sec = Time1.tm_sec - Time2.tm_sec;
 			if(Sec < 0)
 			{
 				bSec = true;
 			}
-			int Min = Time1.tm_min - Time2.tm_min;
-			
+			Min = Time1.tm_min - Time2.tm_min;
+			if(bSec)
+			{
+				Min--;
+				Sec = 60 + Sec;//Sec<0
+				bSec = false;
+			}
+			bMin = Min<0?true:false;
+			Hour = Time1.tm_hour - Time2.tm_hour;
+			if(bMin)
+			{
+				Hour--;
+				Min = 60 + Min;//Min<0
+				bMin = false;
+			}
+			bHour = Hour<0?true:false;
+			Day = Time1.tm_mday - Time2.tm_mday;
+			if(bHour)
+			{
+				Day--;
+				Hour = 24 + Hour;//Hour<0
+				bHour = false;
+			}
+			bDay = Day<1?true:false;
+			Mon = Time1.tm_mon - Time2.tm_mon;
+			if(bDay)
+			{
+				Mon--;
+				Day = MonMap[Mon] + Day;//Day<0
+				bDay = false;
+			}
+			bMon = Mon<1?true:false;
+			Year = Time1.tm_year - Time2.tm_year;
+			if(bMon)
+			{
+				Year--;
+				Mon = 12 + Mon;//Mon<0;
+				bMon = false;
+			}
+			if(Year < 1900)//C++ time函数获取的是自1900年之后过去了多少年,当计算的年份小于1900时，可能会出现表示问题
+			{
+				UE_LOG(LOGNLP,Error,TEXT("Year:%d < 1900"),Year);
+				return RelTime;
+			}
 		}
+		RelTime.tm_year = Year;
+		RelTime.tm_mon = Mon;
+		RelTime.tm_mday = Day;
+		RelTime.tm_hour = Hour;
+		RelTime.tm_min = Min;
+		RelTime.tm_sec = Sec;
 		return RelTime;
 	}
 	// 时间字符串转Tm，时间字符串格式为：xxxx-xx-xx xx:xx:xx
@@ -265,6 +312,32 @@ namespace GlobalManager
 		//tm结构体中tm_mon的表示范围为[0-11],所以在表示具体月份时许需要加1
 		Tm.tm_mon += 1;
 		return Tm;
+	}
+	// 将一句话拆分成一个个的字，支持纯中文、纯英文和中英文混合
+	inline std::vector<std::string> SplitTextToWord(const std::string& Text)
+	{
+		int Num = Text.size();
+		int i = 0;
+		std::vector<std::string> RelVec;
+		while(i < Num)
+		{
+			int size = 1;
+			if(Text[i] & 0x80)
+			{
+				char Chr = Text[i];
+				Chr <<= 1;
+				do
+				{
+					Chr <<= 1;
+					++size;
+				}
+				while (Chr & 0x80);
+			}
+			std::string Word = Text.substr(i,size);
+			RelVec.push_back(Word);
+			i += size;
+		}
+		return RelVec;
 	}
 }
 

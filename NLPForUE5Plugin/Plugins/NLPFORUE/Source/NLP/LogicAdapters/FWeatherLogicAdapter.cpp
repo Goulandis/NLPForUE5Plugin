@@ -153,6 +153,7 @@ std::string FWeatherLogicAdapter::GetDateFromText(const std::string& Text)
 			}
 		}
 	}
+	UE_LOG(LOGNLP,Warning,TEXT("Date:%s"),*DebugLog::Log(Date));
 	std::string NowDate;
 	std::time_t Timet;
 	std::time(&Timet);
@@ -192,6 +193,37 @@ void FWeatherLogicAdapter::FormatDate(std::tm& Tm,std::string& Date)
 		std::tm TargetDate = GlobalManager::TimeOperator(NowDate,TimePeriod);
 		Date = GlobalManager::TmToString(TargetDate);
 	}
+	else
+	{
+		std::tm Tm = {0};
+		std::regex Pattren1,Pattren2;
+		std::smatch Matchs1,Matchs2;
+		std::string Prefix1 = R"(\d+年\b(?:[1-9]|1[0-2])\b月\b(?:[1-9]|1\d|2[0-9]|3[0-1])\b)";
+		std::string Prefix2 = R"([零一二三四五六七八九]+年[零一二三四五六七八九十]+月[零一二三四五六七八九十]+)";
+		Pattren1 = Prefix1 + "日|" + Prefix1 + "号|" + Prefix1;
+		Pattren2 = Prefix2 + "日|" + Prefix2 + "号|" + Prefix2;
+		if(std::regex_search(Date,Matchs1,Pattren1))
+		{
+			std::vector<std::string> Words;
+			GlobalManager::jieba.CutHMM(Date,Words);
+			if(Words.size() == 6)
+			{
+				Tm.tm_year = GlobalManager::IsNumber(Words[0])?std::stoi(Words[0]):0;
+				Tm.tm_mon = GlobalManager::IsNumber(Words[2])?std::stoi(Words[2]):0;
+				Tm.tm_mday = GlobalManager::IsNumber(Words[4])?std::stoi(Words[4]):0;
+			}
+			else
+			{
+				UE_LOG(LOGNLP,Error,TEXT("Date format error"));
+			}
+		}
+		else if(std::regex_search(Date,Matchs2,Pattren2))
+		{
+			std::vector<std::string> Words;
+			GlobalManager::jieba.CutHMM(Date,Words);
+		}
+	}
+	std::regex pattern(R"(\d+年\d+)");
 }
 
 std::string FWeatherLogicAdapter::GetCityAdcode(const std::string& City)

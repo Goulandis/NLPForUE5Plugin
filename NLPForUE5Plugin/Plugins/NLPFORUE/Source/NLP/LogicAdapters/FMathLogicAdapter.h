@@ -4,11 +4,12 @@
 #include <set>
 #include "FLogicAdapter.h"
 #include "CoreMinimal.h"
+#include "NLP/Common/GlobalManager.h"
 #include "NLP/Common/LogDefine.h"
 
 struct OpeAndInd
 {
-	std::string Ope;
+	GlobalManager::OpeTag Ope;
 	int Ind;
 	int Ord;
 };
@@ -80,8 +81,6 @@ public:
 	std::string MathTextFormat(std::string Text,const HandleType Type);
 	// 提取中文数学算式描述中的算式部分
 	std::string FindFormulaDescription(const std::string& Text,std::vector<std::string>* FormulaVec = nullptr);
-	// 将一句中文拆分成一个个的字
-	std::vector<std::string> SplitTextToWord(const std::string& Text);
 	// 提取一个句子中所有的中文数值
 	std::vector<std::string> SplitTextToNum(const std::string& FormulaDescription);
 	// 将中文数值转换为阿拉伯数值，使用“中文数值-阿拉伯数值”键值对存储
@@ -92,16 +91,16 @@ private:
 	FMathLogicAdapter();
 
 	template<typename T>
-	T SingleOperationFormula(const T& Prefix,const T& Subfix,const std::string Operation)
+	T SingleOperationFormula(const T& Prefix,const T& Subfix,const GlobalManager::OpeTag Operation)
 	{
 		T Rel;
-		if(Operation == "+"){Rel = Prefix + Subfix;}
-		else if(Operation == "-"){Rel = Prefix - Subfix;}
-		else if(Operation == "*"){Rel = Prefix * Subfix;}
-		else if(Operation == "/"){Rel = Prefix / Subfix;}
-		else if(Operation == "^"){Rel = std::pow(Prefix,Subfix);}
-		else if(Operation == "%"){Rel = (int)Prefix % (int)Subfix;}
-		else if(Operation == "√"){Rel = std::pow(Subfix,(float)1/Prefix);UE_LOG(LOGNLP,Log,TEXT("Rel:%f"),Rel);}
+		if(Operation == GlobalManager::OpeTag::Add){Rel = Prefix + Subfix;}
+		else if(Operation == GlobalManager::OpeTag::Sub){Rel = Prefix - Subfix;}
+		else if(Operation == GlobalManager::OpeTag::Mul){Rel = Prefix * Subfix;}
+		else if(Operation == GlobalManager::OpeTag::Div){Rel = Prefix / Subfix;}
+		else if(Operation == GlobalManager::OpeTag::Pow){Rel = std::pow(Prefix,Subfix);}
+		else if(Operation == GlobalManager::OpeTag::Rem){Rel = (int)Prefix % (int)Subfix;}
+		else if(Operation == GlobalManager::OpeTag::Rot){Rel = std::pow(Subfix,(float)1/Prefix);}
 		return Rel;
 	}
 
