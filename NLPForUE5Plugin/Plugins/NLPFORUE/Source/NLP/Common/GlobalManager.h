@@ -1,8 +1,6 @@
 ﻿#ifndef GLOBALMANAGER
 #define GLOBALMANAGER
 
-#define TOFSTR(Str) FString(UTF8_TO_TCHAR(Str.c_str())) 
-
 #include "cppjieba/Jieba.hpp"
 #include "NLP/Preprossors/Define.h"
 #include "NLP/LogicAdapters/Define.h"
@@ -70,7 +68,7 @@ namespace GlobalManager
 		std::vector<std::pair<std::string,std::string>> Tagers;
 		jieba.Tag(Word,Tagers);
 		bool Rel = false;
-		std::regex ExcPattren(R"(一下|一次|多少|余|二次|三次|几)");
+		std::regex ExcPattren(R"(一下|一次|多少|余|二次|三次|几|年|月|日|号)");
 		std::regex NumPattren(R"(\d+)");
 		for(std::pair<std::string,std::string> Pai : Tagers)
 		{
@@ -338,6 +336,61 @@ namespace GlobalManager
 			i += size;
 		}
 		return RelVec;
+	}
+	// 字符串数值转整型数值，支持中文字符串和数字字符串
+	inline int64 StrValueToIntValue(const std::string NumWord)
+	{
+		std::map<std::string,int> ChineseNumMap = {
+			{"零",0},{"一",1},{"二",2},{"两",2},{"三",3},{"四",4},{"五",5},{"六",6},{"七",7},{"八",8},{"九",9},
+			{"十",10},{"百",100},{"千",1000},{"万",10000},{"亿",100000000},
+			{"0",0},{"1",1},{"2",2},{"3",3},{"4",4},{"5",5},{"6",6},{"7",7},{"8",8},{"9",9},
+		};
+		std::vector<std::string> SingleNumVec = GlobalManager::SplitTextToWord(NumWord);
+		int64 Rel = 0, Tmp = 0, HndMln = 0, Float = 0;
+		int64 CurrDigit;
+		std::string Point = "";
+		for (std::string Word : SingleNumVec)
+		{
+			if (ChineseNumMap.find(Word) == ChineseNumMap.end())
+			{
+				break;
+			}
+			CurrDigit = ChineseNumMap[Word];
+			// 处理亿位数
+			if (CurrDigit == std::pow(10, 8))
+			{
+				Rel += Tmp;
+				Rel *= CurrDigit;
+				HndMln = HndMln * std::pow(10, 8) + Rel;
+				Rel = 0;
+				Tmp = 0;
+			}
+			// 处理万位数
+			else if (CurrDigit == pow(10, 4))
+			{
+				Rel += Tmp;
+				Rel *= CurrDigit;
+				Tmp = 0;
+			}
+			// 处理千、百、十位数
+			else if (CurrDigit >= 10)
+			{
+				if (Tmp == 0)
+				{
+					Tmp = 1;
+				}
+				Rel = Rel + CurrDigit * Tmp;
+				Tmp = 0;
+			}
+			// 处理个位数
+			else
+			{
+				Tmp = Tmp * 10 + CurrDigit;
+			}
+		}
+		Rel += Tmp;
+		Rel += HndMln;
+		return Rel;
 	}
 }
 

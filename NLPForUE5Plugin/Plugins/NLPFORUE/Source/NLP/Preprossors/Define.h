@@ -1,6 +1,15 @@
 ﻿#ifndef PRRPDEFINE
 #define PRRPDEFINE
 
+#define TOFSTR(Str) FString(UTF8_TO_TCHAR(Str.c_str())) 
+
+// 词性宏
+#define CX_M "m" // 数词
+#define CX_T "t" // 时间词
+#define CX_I "i" // 成语
+#define CX_N "n" // 名词
+#define CX_V "v" // 动词
+
 enum class ELanguageType
 {
 	None,

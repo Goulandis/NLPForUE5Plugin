@@ -1,6 +1,7 @@
 #include "FWeatherLogicAdapter.h"
 #include <fstream>
 #include "NLP/Common/GlobalManager.h"
+#include "cpp-httplib/httplib.h"
 
 FWeatherLogicAdapter::FWeatherLogicAdapter()
 {
@@ -30,8 +31,10 @@ bool FWeatherLogicAdapter::Process(const std::string& Input, std::string& Output
 		// 提取城市编码
 		std::string Adcode = GetCityAdcode(City);
 		// 提取时间
-		
+		std::tm Date = {0};
+		FormatDate(Date,MatchText);
 		// 获取指定时间地点的天气信息
+		
 	}
 	return true;
 }
@@ -139,7 +142,7 @@ std::string FWeatherLogicAdapter::GetDateFromText(const std::string& Text)
 	int bContinuous = 0;
 	for(std::pair<std::string,std::string> Pai : Words)
 	{
-		if((Pai.second == "t" || Pai.second == "m" || Pai.second == "i") && (bContinuous == 0 || bContinuous == 1))
+		if((Pai.second == CX_T || Pai.second == CX_M || Pai.second == CX_I) && (bContinuous == 0 || bContinuous == 1))
 		{
 			Date += Pai.first;
 			bContinuous = 1;
@@ -165,6 +168,7 @@ std::string FWeatherLogicAdapter::GetDateFromText(const std::string& Text)
 
 void FWeatherLogicAdapter::FormatDate(std::tm& Tm,std::string& Date)
 {
+	// 如果时间是时间代词
 	if(Date == "今天")
 	{
 		Date = std::to_string(Tm.tm_year) + "-" + std::to_string(Tm.tm_mon) + "-" + std::to_string(Tm.tm_mday);
@@ -193,15 +197,16 @@ void FWeatherLogicAdapter::FormatDate(std::tm& Tm,std::string& Date)
 		std::tm TargetDate = GlobalManager::TimeOperator(NowDate,TimePeriod);
 		Date = GlobalManager::TmToString(TargetDate);
 	}
+	// 如果时间是具体时间说明
 	else
 	{
-		std::tm Tm = {0};
 		std::regex Pattren1,Pattren2;
 		std::smatch Matchs1,Matchs2;
 		std::string Prefix1 = R"(\d+年\b(?:[1-9]|1[0-2])\b月\b(?:[1-9]|1\d|2[0-9]|3[0-1])\b)";
 		std::string Prefix2 = R"([零一二三四五六七八九]+年[零一二三四五六七八九十]+月[零一二三四五六七八九十]+)";
 		Pattren1 = Prefix1 + "日|" + Prefix1 + "号|" + Prefix1;
 		Pattren2 = Prefix2 + "日|" + Prefix2 + "号|" + Prefix2;
+		// 如果时间是阿拉伯数字格形式，如：2023年11月21日
 		if(std::regex_search(Date,Matchs1,Pattren1))
 		{
 			std::vector<std::string> Words;
@@ -214,16 +219,55 @@ void FWeatherLogicAdapter::FormatDate(std::tm& Tm,std::string& Date)
 			}
 			else
 			{
-				UE_LOG(LOGNLP,Error,TEXT("Date format error"));
+				UE_LOG(LOGNLP,Error,TEXT("Date format error : %s  Words.size=%d"),*TOFSTR(Date),(int)Words.size());
 			}
 		}
+		// 如果时间是中文数字形式，如：二零二三年十一月二十一日
 		else if(std::regex_search(Date,Matchs2,Pattren2))
 		{
-			std::vector<std::string> Words;
-			GlobalManager::jieba.CutHMM(Date,Words);
+			std::vector<std::string> Words = GlobalManager::SplitTextToWord(Date);
+			std::vector<std::string> NumWords;
+			std::string NumWord;
+			for(int i=0;i<Words.size();++i)
+			{
+				if(GlobalManager::IsNumber(Words[i]))
+				{
+					NumWord += Words[i];
+				}
+				else
+				{
+					if(NumWord != "")
+					{
+						NumWords.push_back(NumWord);
+						NumWord = "";
+					}
+					// 只有一句话中日期中的"日"或“号”才能作为结束标志
+					if(Words[i] == "日" || Words[i] == "号")
+					{
+						if(i - 1 > 0)
+						{
+							if(GlobalManager::IsNumber(Words[i-1])) break;
+						}
+					}
+				}
+			}
+			if(NumWords.size() == 3)
+			{
+				Tm.tm_year = GlobalManager::StrValueToIntValue(NumWords[0]);
+				Tm.tm_mon = GlobalManager::StrValueToIntValue(NumWords[1]);
+				Tm.tm_mday = GlobalManager::StrValueToIntValue(NumWords[2]);
+			}
+			else
+			{
+				UE_LOG(LOGNLP,Error,TEXT("Date format error : %s NumWords.size=%d"),*TOFSTR(Date),(int)NumWords.size());
+			}
 		}
 	}
-	std::regex pattern(R"(\d+年\d+)");
+}
+
+std::string FWeatherLogicAdapter::GetWeatherInfo(const std::string& City, const std::string& Time)
+{
+	
 }
 
 std::string FWeatherLogicAdapter::GetCityAdcode(const std::string& City)

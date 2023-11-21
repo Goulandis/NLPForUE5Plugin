@@ -31,12 +31,12 @@ FMathLogicAdapter::FMathLogicAdapter()
 			GlobalManager::jieba.Tag(Tmp,Tagers);
 			for(std::pair<std::string,std::string> Pair : Tagers)
 			{
-				if(Pair.second == "v")
+				if(Pair.second == CX_V)
 				{
 					VerbDict.insert(Pair.first);
 					continue;
 				}
-				if(Pair.second == "n")
+				if(Pair.second == CX_N)
 				{
 					NounDict.insert(Pair.first);
 				}
@@ -944,7 +944,6 @@ std::vector<std::pair<std::string, int64>> FMathLogicAdapter::ChineseNumToInt(co
 	{
 		std::vector<std::string> SingleNumVec = GlobalManager::SplitTextToWord(Item);
 		int64 Rel = 0,Tmp=0,HndMln=0,Float=0;
-		//std::string FNum = "";
 		int64 CurrDigit;
 		std::string Point = "";
 		for(std::string Word : SingleNumVec)

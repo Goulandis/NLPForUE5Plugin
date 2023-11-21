@@ -28,7 +28,8 @@ public class NLP : ModuleRules
 		PublicIncludePaths.AddRange(new string[]
 		{
 			Path.Combine(CppJiebaPath,"include"),
-			Path.Combine(CppJiebaPath,"deps/limonp/include")
+			Path.Combine(CppJiebaPath,"deps/limonp/include"),
+			//Path.Combine(ModulePath, "../cpp-httplib")
 		});
 	}
 }
