@@ -29,12 +29,12 @@ bool FWeatherLogicAdapter::Process(const std::string& Input, std::string& Output
 		// 提取城市
 		std::string City = GetCityFromText(MatchText);
 		// 提取城市编码
-		std::string Adcode = GetCityAdcode(City);
+		//std::string Adcode = GetCityAdcode(City);
 		// 提取时间
 		std::tm Date = {0};
 		FormatDate(Date,MatchText);
 		// 获取指定时间地点的天气信息
-		
+		Output = GetWeatherInfo(City,Date);
 	}
 	return true;
 }
@@ -47,16 +47,17 @@ bool FWeatherLogicAdapter::IsAskWeather(const std::string& Text,std::string& Mat
 		"ns uj n",
 		"ns t uj n",
 		"ns t m uj n",
-		"ns t m m uj n"
+		"ns t m m uj n",
+		"ns x m m m uj n",
 		"ns l",
 		"ns uj l",
 		"ns t uj l",
 		"ns t m uj l",
-		"ns t m m uj l"
+		"ns t m m uj l",
 		"t ns uj l",
 		"t ns uj n",
 		"t m ns uj n",
-		"t m ns uj l"
+		"t m ns uj l",
 		"t m m ns uj n",
 		"t m m ns uj l"
 	};
@@ -81,6 +82,11 @@ bool FWeatherLogicAdapter::IsAskWeather(const std::string& Text,std::string& Mat
 			break;
 		}
 	}
+	if(MatchTag.empty())
+	{
+		UE_LOG(LOGNLP,Log,TEXT("没有匹配的天气询问词性组合，当前文本词性:%s"),*TOFSTR(TextTag));
+		return false;
+	}
 	const char* SplitChr = " ";
 	std::vector<std::string> TagVec = GlobalManager::SplitString(MatchTag,SplitChr);
 	int Index = 0;
@@ -100,7 +106,7 @@ bool FWeatherLogicAdapter::IsAskWeather(const std::string& Text,std::string& Mat
 	}
 	Words.clear();
 	GlobalManager::jieba.Tag(MatchText,Words);
-	// 判断匹配子串中词性是名词或习用语的单词中是否包含“天气”一次，以进一步确认文本是否在询问天气信息
+	// 判断匹配子串中词性是名词或习用语的单词中是否包含“天气”一词，以进一步确认文本是否在询问天气信息
 	for(int i = Words.size()-1;i>=0;--i)
 	{
 		if(Words[i].second == "n" || Words[i].second == "l")
@@ -166,123 +172,139 @@ std::string FWeatherLogicAdapter::GetDateFromText(const std::string& Text)
 	return "";
 }
 
-void FWeatherLogicAdapter::FormatDate(std::tm& Tm,std::string& Date)
+void FWeatherLogicAdapter::FormatDate(std::tm& Tm,std::string& Text)
 {
-	// 如果时间是时间代词
-	if(Date == "今天")
+	std::regex Pattren1,Pattren2;
+	std::smatch Matchs1,Matchs2;
+	std::string Prefix1 = R"(\d+年\b(?:[1-9]|1[0-2])\b月\b(?:[1-9]|1\d|2[0-9]|3[0-1])\b)";
+	std::string Prefix2 = R"([零一二三四五六七八九]+年[零一二三四五六七八九十]+月[零一二三四五六七八九十]+)";
+	Pattren1 = Prefix1 + "日|" + Prefix1 + "号|" + Prefix1;
+	Pattren2 = Prefix2 + "日|" + Prefix2 + "号|" + Prefix2;
+	
+	// 如果日期是时间代词
+	if(Text == "今天")
 	{
-		Date = std::to_string(Tm.tm_year) + "-" + std::to_string(Tm.tm_mon) + "-" + std::to_string(Tm.tm_mday);
+		Text = std::to_string(Tm.tm_year) + "-" + std::to_string(Tm.tm_mon) + "-" + std::to_string(Tm.tm_mday);
 	}
-	else if(Date == "明天")
+	else if(Text == "明天")
 	{
 		std::tm NowDate = GlobalManager::GetNowLocalTime();
 		std::tm TimePeriod = {0};
 		TimePeriod.tm_mday = 1;
 		std::tm TargetDate = GlobalManager::TimeOperator(NowDate,TimePeriod);
-		Date = GlobalManager::TmToString(TargetDate);
+		Text = GlobalManager::TmToString(TargetDate);
 	}
-	else if(Date == "后天")
+	else if(Text == "后天")
 	{
 		std::tm NowDate = GlobalManager::GetNowLocalTime();
 		std::tm TimePeriod = {0};
 		TimePeriod.tm_mday = 2;
 		std::tm TargetDate = GlobalManager::TimeOperator(NowDate,TimePeriod);
-		Date = GlobalManager::TmToString(TargetDate);
+		Text = GlobalManager::TmToString(TargetDate);
 	}
-	else if(Date == "大后天")
+	else if(Text == "大后天")
 	{
 		std::tm NowDate = GlobalManager::GetNowLocalTime();
 		std::tm TimePeriod = {0};
 		TimePeriod.tm_mday = 3;
 		std::tm TargetDate = GlobalManager::TimeOperator(NowDate,TimePeriod);
-		Date = GlobalManager::TmToString(TargetDate);
+		Text = GlobalManager::TmToString(TargetDate);
 	}
-	// 如果时间是具体时间说明
+	// 如果日期是阿拉伯数字格形式，如：2023年11月21日
+	else if(std::regex_search(Text,Matchs1,Pattren1))
+	{
+		std::vector<std::string> Words;
+		GlobalManager::jieba.CutHMM(Text,Words);
+		if(Words.size() == 6)
+		{
+			Tm.tm_year = GlobalManager::IsNumber(Words[0])?std::stoi(Words[0]):0;
+			Tm.tm_mon = GlobalManager::IsNumber(Words[2])?std::stoi(Words[2]):0;
+			Tm.tm_mday = GlobalManager::IsNumber(Words[4])?std::stoi(Words[4]):0;
+		}
+		else
+		{
+			UE_LOG(LOGNLP,Error,TEXT("Date format error : %s  Words.size=%d"),*TOFSTR(Text),(int)Words.size());
+		}
+	}
+	// 如果日期是中文数字形式，如：二零二三年十一月二十一日
+	else if(std::regex_search(Text,Matchs2,Pattren2))
+	{
+		std::vector<std::string> Words = GlobalManager::SplitTextToWord(Text);
+		std::vector<std::string> NumWords;
+		std::string NumWord;
+		for(int i=0;i<Words.size();++i)
+		{
+			if(GlobalManager::IsNumber(Words[i]))
+			{
+				NumWord += Words[i];
+			}
+			else
+			{
+				if(NumWord != "")
+				{
+					NumWords.push_back(NumWord);
+					NumWord = "";
+				}
+				// 只有一句话中日期中的"日"或“号”才能作为结束标志
+				if(Words[i] == "日" || Words[i] == "号")
+				{
+					if(i - 1 > 0)
+					{
+						if(GlobalManager::IsNumber(Words[i-1])) break;
+					}
+				}
+			}
+		}
+		if(NumWords.size() == 3)
+		{
+			Tm.tm_year = GlobalManager::StrValueToIntValue(NumWords[0]);
+			Tm.tm_mon = GlobalManager::StrValueToIntValue(NumWords[1]);
+			Tm.tm_mday = GlobalManager::StrValueToIntValue(NumWords[2]);
+		}
+		else
+		{
+			UE_LOG(LOGNLP,Error,TEXT("Date format error : %s NumWords.size=%d"),*TOFSTR(Text),(int)NumWords.size());
+		}
+	}
+	// 如果没有明确的时间提示词，则去当前日期
 	else
 	{
-		std::regex Pattren1,Pattren2;
-		std::smatch Matchs1,Matchs2;
-		std::string Prefix1 = R"(\d+年\b(?:[1-9]|1[0-2])\b月\b(?:[1-9]|1\d|2[0-9]|3[0-1])\b)";
-		std::string Prefix2 = R"([零一二三四五六七八九]+年[零一二三四五六七八九十]+月[零一二三四五六七八九十]+)";
-		Pattren1 = Prefix1 + "日|" + Prefix1 + "号|" + Prefix1;
-		Pattren2 = Prefix2 + "日|" + Prefix2 + "号|" + Prefix2;
-		// 如果时间是阿拉伯数字格形式，如：2023年11月21日
-		if(std::regex_search(Date,Matchs1,Pattren1))
-		{
-			std::vector<std::string> Words;
-			GlobalManager::jieba.CutHMM(Date,Words);
-			if(Words.size() == 6)
-			{
-				Tm.tm_year = GlobalManager::IsNumber(Words[0])?std::stoi(Words[0]):0;
-				Tm.tm_mon = GlobalManager::IsNumber(Words[2])?std::stoi(Words[2]):0;
-				Tm.tm_mday = GlobalManager::IsNumber(Words[4])?std::stoi(Words[4]):0;
-			}
-			else
-			{
-				UE_LOG(LOGNLP,Error,TEXT("Date format error : %s  Words.size=%d"),*TOFSTR(Date),(int)Words.size());
-			}
-		}
-		// 如果时间是中文数字形式，如：二零二三年十一月二十一日
-		else if(std::regex_search(Date,Matchs2,Pattren2))
-		{
-			std::vector<std::string> Words = GlobalManager::SplitTextToWord(Date);
-			std::vector<std::string> NumWords;
-			std::string NumWord;
-			for(int i=0;i<Words.size();++i)
-			{
-				if(GlobalManager::IsNumber(Words[i]))
-				{
-					NumWord += Words[i];
-				}
-				else
-				{
-					if(NumWord != "")
-					{
-						NumWords.push_back(NumWord);
-						NumWord = "";
-					}
-					// 只有一句话中日期中的"日"或“号”才能作为结束标志
-					if(Words[i] == "日" || Words[i] == "号")
-					{
-						if(i - 1 > 0)
-						{
-							if(GlobalManager::IsNumber(Words[i-1])) break;
-						}
-					}
-				}
-			}
-			if(NumWords.size() == 3)
-			{
-				Tm.tm_year = GlobalManager::StrValueToIntValue(NumWords[0]);
-				Tm.tm_mon = GlobalManager::StrValueToIntValue(NumWords[1]);
-				Tm.tm_mday = GlobalManager::StrValueToIntValue(NumWords[2]);
-			}
-			else
-			{
-				UE_LOG(LOGNLP,Error,TEXT("Date format error : %s NumWords.size=%d"),*TOFSTR(Date),(int)NumWords.size());
-			}
-		}
+		
+		
+		
 	}
 }
 
-std::string FWeatherLogicAdapter::GetWeatherInfo(const std::string& City, const std::string& Time)
+std::string FWeatherLogicAdapter::GetWeatherInfo(const std::string& City, const std::tm& Date)
 {
+	// 获取城市编码
+	std::string Adcode = GetCityAdcode(City);
+	// 向高德平台发起https的get请求
+	httplib::Client HttpClient("restapi.amap.com");
+	httplib::Params Params;
+	Params.emplace("key","62aac7f2fbe5a09d9c69f611d238034b");
+	Params.emplace("city",Adcode);
+	Params.emplace("extensions","all");
+	httplib::Headers Heard = {{"Content-Type","application/x-www-from-urlencoded"}};
+	httplib::Result Res = HttpClient.Get("/v3/weather/weatherInfo",Params,Heard);
 	
+	
+	return Res->body;
 }
 
 std::string FWeatherLogicAdapter::GetCityAdcode(const std::string& City)
 {
 	std::map<std::string,CityAdcode>::iterator It = CityAdcodeMap.find(City);
-	if(It != CityAdcodeMap.end())
+	// 在城市列表中寻找包含关键词的地名
+	for(std::pair<std::string,CityAdcode> Pai : CityAdcodeMap)
 	{
-		return It->second.Adcode;
+		if(Pai.first.find(City) != std::string::npos)
+		{
+			return Pai.second.Adcode;
+		}
 	}
-	else
-	{
-		UE_LOG(LOGNLP,Error,TEXT("City %s does not exist in the list"),*DebugLog::Log(City));
-		return "";
-	}
-	
+	UE_LOG(LOGNLP,Error,TEXT("City %s does not exist in the list"),*DebugLog::Log(City));
+	return "";
 }
 
 void FWeatherLogicAdapter::InitCityAdcode()

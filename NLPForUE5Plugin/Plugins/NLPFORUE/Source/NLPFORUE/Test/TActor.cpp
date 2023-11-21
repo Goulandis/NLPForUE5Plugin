@@ -3,7 +3,6 @@
 #include "NLP/Common/LogDefine.h"
 #include "NLP/Common/GlobalManager.h"
 #include <regex>
-//#include "cpp-httplib/httplib.h"
 
 DEFINE_LOG_CATEGORY(LOGNLP);
 
@@ -13,10 +12,20 @@ FString ATActor::ComTest(FString Text)
 	std::string Output;
 
 	// const char* Url = "https://restapi.amap.com/v3/weather/weatherInfo?key=62aac7f2fbe5a09d9c69f611d238034b&city=440304&extensions=all";
-	// //httplib::Result Rel = httplib::Client::Get(Url);
-	// httplib::Client cli(Url);
-	// auto res = cli.Get("/hi",{{"Content-Type","application/x-www-from-urlencoded"}});
-	// Output = res->body;
+	// httplib::Client HttpClient("restapi.amap.com");
+	// httplib::Params Params;
+	// Params.emplace("key","62aac7f2fbe5a09d9c69f611d238034b");
+	// Params.emplace("city","440304");
+	// Params.emplace("extensions","all");
+	// httplib::Headers Heard = {{"Content-Type","application/x-www-from-urlencoded"}};
+	// httplib::Result Res = HttpClient.Get("/v3/weather/weatherInfo",Params,Heard);
+	// if(Res && Res->status == 200)
+	// {
+	// 	Output = Res->body;
+	// }
+
+	wla->Process(Input,Output);
+	//wla->IsAskWeather(Input,Output);
 	
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;

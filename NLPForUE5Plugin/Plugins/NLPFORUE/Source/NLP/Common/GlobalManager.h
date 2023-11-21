@@ -7,6 +7,9 @@
 #include "LogDefine.h"
 #include <regex>
 #include <time.h>
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include "cpp-httplib/httplib.h"
 
 // Global debug functions
 namespace DebugLog

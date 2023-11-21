@@ -29,7 +29,7 @@ public class NLP : ModuleRules
 		{
 			Path.Combine(CppJiebaPath,"include"),
 			Path.Combine(CppJiebaPath,"deps/limonp/include"),
-			//Path.Combine(ModulePath, "../cpp-httplib")
+			Path.Combine(ModulePath, "../cpp-httplib")
 		});
 	}
 }
