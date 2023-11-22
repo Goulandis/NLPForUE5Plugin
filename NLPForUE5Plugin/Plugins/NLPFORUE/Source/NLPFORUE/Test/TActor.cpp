@@ -1,8 +1,11 @@
 #include "TActor.h"
 #include "NLPFORUE/Common/FDefine.h"
 #include "NLP/Common/LogDefine.h"
-#include "NLP/Common/GlobalManager.h"
+//#include "NLP/Common/GlobalManager.h"
 #include <regex>
+#include "jsoncpp2/json/json-forwards.h"
+#include "jsoncpp2/json/json.h"
+
 
 DEFINE_LOG_CATEGORY(LOGNLP);
 
@@ -11,21 +14,10 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	// const char* Url = "https://restapi.amap.com/v3/weather/weatherInfo?key=62aac7f2fbe5a09d9c69f611d238034b&city=440304&extensions=all";
-	// httplib::Client HttpClient("restapi.amap.com");
-	// httplib::Params Params;
-	// Params.emplace("key","62aac7f2fbe5a09d9c69f611d238034b");
-	// Params.emplace("city","440304");
-	// Params.emplace("extensions","all");
-	// httplib::Headers Heard = {{"Content-Type","application/x-www-from-urlencoded"}};
-	// httplib::Result Res = HttpClient.Get("/v3/weather/weatherInfo",Params,Heard);
-	// if(Res && Res->status == 200)
-	// {
-	// 	Output = Res->body;
-	// }
+	//wla->Process(Input,Output);
 
-	wla->Process(Input,Output);
-	//wla->IsAskWeather(Input,Output);
+	Json::Value Va;
+	
 	
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;

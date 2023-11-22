@@ -8,10 +8,10 @@ public class NLP : ModuleRules
 		get { return ModuleDirectory; }
 	}
 
-	private string CppJiebaPath
-	{
-		get { return Path.GetFullPath(Path.Combine(ModulePath, "../cppjieba")); }
-	}
+	// private string CppJiebaPath
+	// {
+	// 	get { return Path.GetFullPath(Path.Combine(ModulePath, "../cppjieba")); }
+	// }
 
 	public NLP(ReadOnlyTargetRules Target) : base(Target)
 	{
@@ -27,9 +27,13 @@ public class NLP : ModuleRules
 		
 		PublicIncludePaths.AddRange(new string[]
 		{
-			Path.Combine(CppJiebaPath,"include"),
-			Path.Combine(CppJiebaPath,"deps/limonp/include"),
-			Path.Combine(ModulePath, "../cpp-httplib")
+			Path.Combine(ModulePath,"../cppjieba/include"),
+			Path.Combine(ModulePath,"../cppjieba/deps/limonp/include"),
+			Path.Combine(ModulePath, "../cpp-httplib"),
+			Path.Combine(ModulePath, "../jsoncpp/src"),
+			Path.Combine(ModulePath, "../jsoncpp/include/json"),
+			Path.Combine(ModulePath, "../jsoncpp2"),
+			Path.Combine(ModulePath, "../jsoncpp2/json")
 		});
 	}
 }

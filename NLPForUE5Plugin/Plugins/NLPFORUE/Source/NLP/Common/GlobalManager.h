@@ -10,6 +10,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include "cpp-httplib/httplib.h"
+//#include "jsoncpp/json/json.h"
 
 // Global debug functions
 namespace DebugLog
@@ -282,6 +283,7 @@ namespace GlobalManager
 				Time.tm_hour = std::stoi(TimeVec[0]);
 				Time.tm_min = std::stoi(TimeVec[1]);
 				Time.tm_sec = std::stoi(TimeVec[2]);
+				return Time;
 			}
 			else
 			{
@@ -291,10 +293,18 @@ namespace GlobalManager
 		}
 		else
 		{
+			std::vector<std::string> DateVec;
+			limonp::Split(DateAndTimeVec[0],DateVec,"-");
+			if(DateVec.size() == 3)
+			{
+				Time.tm_year = std::stoi(DateVec[0]);
+				Time.tm_mon = std::stoi(DateVec[1]);
+				Time.tm_mday = std::stoi(DateVec[2]);
+				return Time;
+			}
 			UE_LOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*DebugLog::Log(TimeStr));
 			return Time;
 		}
-		return Time;
 	}
 	// Tm时间转字符串，字符串格式:xxxx-xx-xx xx:xx:xx
 	inline std::string TmToString(std::tm Time)
@@ -395,6 +405,27 @@ namespace GlobalManager
 		Rel += HndMln;
 		return Rel;
 	}
+
+	// inline  Json::Value ReadJsonFromString(const std::string& Str)
+	// {
+	// 	// Json读对象创建工厂
+	// 	Json::CharReaderBuilder ReaderBuilder;
+	// 	// 支持UTF8，以支持中文读取
+	// 	ReaderBuilder["emitUTF8"] = true;
+	// 	// 通过工程创建Json读对象
+	// 	std::unique_ptr<Json::CharReader> Reader(ReaderBuilder.newCharReader());
+	// 	// Json值对象
+	// 	Json::Value Root;
+	// 	// 错误信息
+	// 	std::string Error;
+	// 	// 从字符串中读取Json，并存储到Json值对象中
+	// 	bool IsOk = Reader->parse(Str.c_str(),Str.c_str()+Str.size(),&Root,&Error);
+	// 	if(!IsOk || !Error.empty())
+	// 	{
+	// 		UE_LOG(LOGNLP,Error,TEXT("There was an error in json parsing,Error:%s"),*TOFSTR(Error));
+	// 	}
+	// 	return Root;
+	// }
 }
 
 #endif
