@@ -24,6 +24,11 @@
 			"Name": "NLP",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "Jsoncpp",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	]
 }

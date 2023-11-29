@@ -28,7 +28,7 @@ public:
 	//Json::Value GetWeatherInfo(const std::string& City,const std::tm& Date);
 	// 从城市编码列表中寻找指定名称的城市编码
 	std::string GetCityAdcode(const std::string& City);
-	std::string SpawnWeatherLogicAdapterAnswer(const Json::Value& Value,const std::string& City);
+	//std::string SpawnWeatherLogicAdapterAnswer(const Json::Value& Value,const std::string& City);
 private:
 	FWeatherLogicAdapter();
 	void InitCityAdcode();

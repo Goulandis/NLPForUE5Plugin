@@ -322,22 +322,22 @@ void FWeatherLogicAdapter::InitCityAdcode()
 	Ifs.close();
 }
 
-std::string FWeatherLogicAdapter::SpawnWeatherLogicAdapterAnswer(const Json::Value& Value,const std::string& City)
-{
-	std::stringstream Fmt;
-	//Value.get("date","null").asString();
-	//Fmt<<City<<Value.get("date","null").asString()<<"的天气情况：\n"<<"白天：\n";
-	//std::string DayWeather = Value.get("dayweather","null").asString();
-	// std::string NightWeather = Value["nightweather"].asString();
-	// std::string DayTemp = Value["daytemp"].asString();
-	// std::string NightTemp = Value["nighttemp"].asString();
-	// std::string DayWind = Value["daywind"].asString();
-	// std::string NightWind = Value["nightwind"].asString();
-	// std::string DayPower = Value["daypower"].asString();
-	// std::string NightPower = Value["nightpower"].asString();
-	// Fmt<<"天气："<<DayWeather<<"，温度："<<DayTemp<<"，风向："<<DayWind<<"，风力："<<DayPower<<"\n";
-	// Fmt<<"夜间：\n天气："<<NightWeather<<"，温度："<<NightTemp<<"，风向："<<NightWind<<"，风力："<<NightPower<<"\n";
-	//return Fmt.str();
-
-	return "";
-}
+// std::string FWeatherLogicAdapter::SpawnWeatherLogicAdapterAnswer(const Json::Value& Value,const std::string& City)
+// {
+// 	std::stringstream Fmt;
+// 	//Value.get("date","null").asString();
+// 	//Fmt<<City<<Value.get("date","null").asString()<<"的天气情况：\n"<<"白天：\n";
+// 	//std::string DayWeather = Value.get("dayweather","null").asString();
+// 	// std::string NightWeather = Value["nightweather"].asString();
+// 	// std::string DayTemp = Value["daytemp"].asString();
+// 	// std::string NightTemp = Value["nighttemp"].asString();
+// 	// std::string DayWind = Value["daywind"].asString();
+// 	// std::string NightWind = Value["nightwind"].asString();
+// 	// std::string DayPower = Value["daypower"].asString();
+// 	// std::string NightPower = Value["nightpower"].asString();
+// 	// Fmt<<"天气："<<DayWeather<<"，温度："<<DayTemp<<"，风向："<<DayWind<<"，风力："<<DayPower<<"\n";
+// 	// Fmt<<"夜间：\n天气："<<NightWeather<<"，温度："<<NightTemp<<"，风向："<<NightWind<<"，风力："<<NightPower<<"\n";
+// 	//return Fmt.str();
+//
+// 	return "";
+// }

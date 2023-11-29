@@ -3,8 +3,8 @@
 #include "NLP/Common/LogDefine.h"
 //#include "NLP/Common/GlobalManager.h"
 #include <regex>
-#include "jsoncpp2/json/json-forwards.h"
-#include "jsoncpp2/json/json.h"
+//#include "jsoncpp2/json/json-forwards.h"
+//#include "jsoncpp2/json/json.h"
 
 
 DEFINE_LOG_CATEGORY(LOGNLP);
@@ -16,7 +16,7 @@ FString ATActor::ComTest(FString Text)
 
 	//wla->Process(Input,Output);
 
-	Json::Value Va;
+	//Json::Value Va;
 	
 	
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
