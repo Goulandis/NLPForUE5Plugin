@@ -34,12 +34,12 @@ FPreprocessorFactory* FPreprocessorFactory::Instance = nullptr;
 
 FPreprocessorFactory::FPreprocessorFactory()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FPreprocessorFactory constructed"));
+	NLOG(LOGNLP,Log,TEXT("FPreprocessorFactory constructed"));
 }
 
 FPreprocessorFactory::~FPreprocessorFactory()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FPreprocessorFactory destructed"));
+	NLOG(LOGNLP,Log,TEXT("FPreprocessorFactory destructed"));
 }
 
 FPreprocessorFactory* FPreprocessorFactory::CreateInstance()

@@ -2,32 +2,21 @@
 #define GLOBALMANAGER
 
 #include "cppjieba/Jieba.hpp"
-#include "NLP/Preprossors/Define.h"
-//#include "NLP/LogicAdapters/Define.h"
 #include "UEManager.h"
 #include <regex>
 #include <time.h>
+#include <string>
+#include <vector>
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include "cpp-httplib/httplib.h"
 
-// Global debug functions
-namespace DebugLog
-{
-	
-	inline void PrintVec(const std::vector<std::string>& Vec,std::string Flag)
-	{
-		for (int i=0;i<Vec.size();++i)
-		{
-			UE_LOG(LogTemp,Log,TEXT("%s:%s"),*FString(UTF8_TO_TCHAR(Flag.c_str())),*FString(UTF8_TO_TCHAR(Vec[i].c_str())));
-		}
-	}
-
-	inline FString Log(const std::string& Str)
-	{
-		return FString(UTF8_TO_TCHAR(Str.c_str()));
-	}
-}
+// 词性宏
+#define CX_M "m" // 数词
+#define CX_T "t" // 时间词
+#define CX_I "i" // 成语
+#define CX_N "n" // 名词
+#define CX_V "v" // 动词
 
 namespace GlobalManager
 {
@@ -47,21 +36,52 @@ namespace GlobalManager
 		Rot,// 取根
 	};
 
+	enum class ELanguageType
+	{
+		None,
+		zh_CN,//简体中文
+		en_US,//英文(美国)
+		zh_HK//繁体中文(香港)
+	};
+
+	// 资源路径
+	const char* const RESOURCE_PATH = "NLPFORUE/Resources/";
+	const char* const SOURCE_PATH = "NLPFORUE/Source/";
 	// 逻辑适配器配置文件相对路径
 	const char* const LOGICADAPTER_CONFIG_PATH = "Config/LogicAdapter.json";
 	// 数学置信度文件相对路径
 	const char* const MATHCONFIDEXELEVEL_DICT_PATH = "Dicts/MathConfideceLevel";
 	// 中国城市编码列表文件相对路径
 	const char* const CITYADCODEXLSX_PATH = "Dicts/CityAdcode";
+	// 结巴分词字典文件相对路径
+	const char* const DICT_PATH = "cppjieba/dict/jieba.dict.utf8";
+	// 结巴分词hmm模型配置文件相对路径
+	const char* const HMM_PATH = "cppjieba/dict/hmm_model.utf8";
+	// 结巴分词用户词典文件相对路径
+	const char* const USER_DICT_PATH = "cppjieba/dict/user.dict.utf8";
+	// 结巴分词词语权重文件相对路径
+	const char* const IDF_PATH = "cppjieba/dict/idf.utf8";
+	// 结巴分词停用词文件相对路径
+	const char* const STOP_WORD_PATH = "cppjieba/dict/stop_words.utf8";
+	// 敏感词文件相对路径
+	const char* const SENSITIVE_WORD_PATH = "NLPFORUE/Resources/textfilter/keywords";
 
 	
 	// 结巴分词库全局实例
+	// inline cppjieba::Jieba jieba(
+	// TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + DICT_PATH)),
+	// TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + HMM_PATH)),
+	// TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + USER_DICT_PATH)),
+	// TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + IDF_PATH)),
+	// TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + STOP_WORD_PATH))
+	// );
+	
 	inline cppjieba::Jieba jieba(
-	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + DICT_PATH)),
-	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + HMM_PATH)),
-	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + USER_DICT_PATH)),
-	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + IDF_PATH)),
-	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + STOP_WORD_PATH))
+		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + DICT_PATH)),
+		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + HMM_PATH)),
+		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + USER_DICT_PATH)),
+		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + IDF_PATH)),
+		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + STOP_WORD_PATH))
 	);
 
 	// 判断字符串是否匹配数学算式
@@ -249,7 +269,7 @@ namespace GlobalManager
 			}
 			if(Year < 1900)//C++ time函数获取的是自1900年之后过去了多少年,当计算的年份小于1900时，可能会出现表示问题
 			{
-				UE_LOG(LOGNLP,Error,TEXT("Year:%d < 1900"),Year);
+				NLOG(LOGNLP,Error,TEXT("Year:%d < 1900"),Year);
 				return RelTime;
 			}
 		}
@@ -279,7 +299,7 @@ namespace GlobalManager
 			}
 			else
 			{
-				UE_LOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*DebugLog::Log(TimeStr));
+				NLOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*TOFSTR(TimeStr));
 				return Time;
 			}
 			std::vector<std::string> TimeVec;
@@ -293,7 +313,7 @@ namespace GlobalManager
 			}
 			else
 			{
-				UE_LOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*DebugLog::Log(TimeStr));
+				NLOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*TOFSTR(TimeStr));
 				return Time;
 			}
 		}
@@ -308,7 +328,7 @@ namespace GlobalManager
 				Time.tm_mday = std::stoi(DateVec[2]);
 				return Time;
 			}
-			UE_LOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*DebugLog::Log(TimeStr));
+			NLOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*TOFSTR(TimeStr));
 			return Time;
 		}
 	}
@@ -411,27 +431,6 @@ namespace GlobalManager
 		Rel += HndMln;
 		return Rel;
 	}
-
-	// inline  Json::Value ReadJsonFromString(const std::string& Str)
-	// {
-	// 	// Json读对象创建工厂
-	// 	Json::CharReaderBuilder ReaderBuilder;
-	// 	// 支持UTF8，以支持中文读取
-	// 	ReaderBuilder["emitUTF8"] = true;
-	// 	// 通过工程创建Json读对象
-	// 	std::unique_ptr<Json::CharReader> Reader(ReaderBuilder.newCharReader());
-	// 	// Json值对象
-	// 	Json::Value Root;
-	// 	// 错误信息
-	// 	std::string Error;
-	// 	// 从字符串中读取Json，并存储到Json值对象中
-	// 	bool IsOk = Reader->parse(Str.c_str(),Str.c_str()+Str.size(),&Root,&Error);
-	// 	if(!IsOk || !Error.empty())
-	// 	{
-	// 		UE_LOG(LOGNLP,Error,TEXT("There was an error in json parsing,Error:%s"),*TOFSTR(Error));
-	// 	}
-	// 	return Root;
-	// }
 }
 
 #endif

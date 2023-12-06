@@ -1,9 +1,8 @@
 #include "FBaseLogicAdapter.h"
-#include "NLP/Common/GlobalManager.h"
 
 FBaseLogicAdapter::FBaseLogicAdapter()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FBaseLogicAdapter constructed"));
+	NLOG(LOGNLP,Log,TEXT("FBaseLogicAdapter constructed"));
 }
 
 FBaseLogicAdapter& FBaseLogicAdapter::CreateInstance()
@@ -14,5 +13,5 @@ FBaseLogicAdapter& FBaseLogicAdapter::CreateInstance()
 
 FBaseLogicAdapter::~FBaseLogicAdapter()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FBaseLogicAdapter destructed"));
+	NLOG(LOGNLP,Log,TEXT("FBaseLogicAdapter destructed"));
 }

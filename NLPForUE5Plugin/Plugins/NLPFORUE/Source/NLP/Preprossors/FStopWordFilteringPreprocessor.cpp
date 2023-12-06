@@ -1,15 +1,13 @@
 #include "FStopWordFilteringPreprocessor.h"
-#include "Define.h"
-#include "NLP/Common/GlobalManager.h"
 
 FStopWordFilteringPreprocessor::FStopWordFilteringPreprocessor()
 {
-	UE_LOG(LOGNLP,Log,TEXT("StopWordFilteringPreprocessor constructed"));
+	NLOG(LOGNLP,Log,TEXT("StopWordFilteringPreprocessor constructed"));
 }
 
 FStopWordFilteringPreprocessor::~FStopWordFilteringPreprocessor()
 {
-	//UE_LOG(LOGNLP,Log,TEXT("StopWordFilteringPreprocessor destructed"));
+	NLOG(LOGNLP,Log,TEXT("StopWordFilteringPreprocessor destructed"));
 }
 
 FStopWordFilteringPreprocessor& FStopWordFilteringPreprocessor::CreateInstance()

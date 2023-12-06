@@ -1,5 +1,5 @@
 #include "FLogicAdapterFactory.h"
-#include "NLP/Common/GlobalManager.h"
+//#include "NLP/Common/GlobalManager.h"
 
 FLogicAdapterFactory* FLogicAdapterFactory::Instance = nullptr;
 
@@ -34,12 +34,12 @@ FLogicAdapterFactory* FLogicAdapterFactory::Instance = nullptr;
 
 FLogicAdapterFactory::FLogicAdapterFactory()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FLogicAdapterFactory constructed"));
+	NLOG(LOGNLP,Log,TEXT("FLogicAdapterFactory constructed"));
 }
 
 FLogicAdapterFactory::~FLogicAdapterFactory()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FLogicAdapterFactory destructed"));
+	NLOG(LOGNLP,Log,TEXT("FLogicAdapterFactory destructed"));
 }
 
 FLogicAdapterFactory* FLogicAdapterFactory::CreateInstance()

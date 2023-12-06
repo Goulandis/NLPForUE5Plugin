@@ -3,10 +3,10 @@
 
 FLogicAdapterModule::FLogicAdapterModule()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FLogicAdapterModule constructed"));
+	NLOG(LOGNLP,Log,TEXT("FLogicAdapterModule constructed"));
 }
 
 FLogicAdapterModule::~FLogicAdapterModule()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FLogicAdapterModule destructed"));
+	NLOG(LOGNLP,Log,TEXT("FLogicAdapterModule destructed"));
 }

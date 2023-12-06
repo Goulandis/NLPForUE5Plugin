@@ -3,17 +3,17 @@
 
 FPreprocessorModule::FPreprocessorModule()
 {
-	FString SensitiveWordDictPath = FPaths::ProjectPluginsDir() + SENSITIVE_WORD_PATH;
+	FString SensitiveWordDictPath = FPaths::ProjectPluginsDir() + GlobalManager::SENSITIVE_WORD_PATH;
 	string SensitiveWordDictPathCStr = TCHAR_TO_UTF8(*SensitiveWordDictPath);
-	UE_LOG(LOGNLP,Log,TEXT("Loading sensitive word from %s"),*SensitiveWordDictPath);
+	NLOG(LOGNLP,Log,TEXT("Loading sensitive word from %s"),*SensitiveWordDictPath);
 	FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSensitiveWordPreprocessor>()->LoadSensitiveWordDict(SensitiveWordDictPathCStr);
-	UE_LOG(LOGNLP,Log,TEXT("Loaded sensitive word from %s"),*SensitiveWordDictPath);
-	UE_LOG(LOGNLP,Log,TEXT("FPreprocessorModule constructed"));
+	NLOG(LOGNLP,Log,TEXT("Loaded sensitive word from %s"),*SensitiveWordDictPath);
+	NLOG(LOGNLP,Log,TEXT("FPreprocessorModule constructed"));
 }
 
 FPreprocessorModule::~FPreprocessorModule()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FPreprocessorModule destructed"));
+	NLOG(LOGNLP,Log,TEXT("FPreprocessorModule destructed"));
 }
 
 TArray<FString> FPreprocessorModule::Handle(FString& Text) const
@@ -22,17 +22,17 @@ TArray<FString> FPreprocessorModule::Handle(FString& Text) const
 	string RelTmp;
 	vector<string> RelVec;
 	TArray<FString> RelTArr;
-	ELanguageType LType = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FLanguageJudgmentPreprocessor>()->GetLanguageType(TextLocal);
+	GlobalManager::ELanguageType LType = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FLanguageJudgmentPreprocessor>()->GetLanguageType(TextLocal);
 	switch (LType)
 	{
-	case ELanguageType::zh_CN:
+	case GlobalManager::ELanguageType::zh_CN:
 		RelTmp = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSensitiveWordPreprocessor>()->SensitiveWordFiltering(TextLocal);
 		RelTmp = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSpecialSymbolPreprocessor>()->DeteleSpecialSymbol(RelTmp);
 		RelVec = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FStopWordFilteringPreprocessor>()->StopWordFiltering(RelTmp);
 		break;;
-	case ELanguageType::zh_HK:
+	case GlobalManager::ELanguageType::zh_HK:
 		break;
-	case ELanguageType::en_US:
+	case GlobalManager::ELanguageType::en_US:
 		break;
 	default:
 		break;

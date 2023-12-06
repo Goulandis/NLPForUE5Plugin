@@ -11,7 +11,7 @@ ConfigManager& ConfigManager::CreateInstance()
 ConfigManager::ConfigManager()
 {
 	
-	std::ifstream Ifs(GlobalManager::RESOURCE_PATH + GlobalManager::LOGICADAPTER_CONFIG_PATH);
+	std::ifstream Ifs(GlobalManager::RESOURCE_ABSOLUTE_PATH + GlobalManager::LOGICADAPTER_CONFIG_PATH);
 	if(Ifs.is_open())
 	{
 		Ifs >> LogicAdapterConfig;

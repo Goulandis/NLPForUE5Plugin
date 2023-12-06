@@ -22,7 +22,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	ELanguageType GetLanguageType();
+	GlobalManager::ELanguageType GetLanguageType();
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString CWS(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")

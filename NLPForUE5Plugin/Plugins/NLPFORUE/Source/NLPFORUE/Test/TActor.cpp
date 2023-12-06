@@ -14,6 +14,8 @@ FString ATActor::ComTest(FString Text)
 	std::string Output;
 
 	ConfigManager::CreateInstance();
+	std::string a = "a";
+	NLOG(LOGNLP,Log,TEXT("%s"),*TOFSTR(a));
 	
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;
@@ -46,11 +48,11 @@ void ATActor::BeginPlay()
 	Super::BeginPlay();
 }
 
-ELanguageType ATActor::GetLanguageType()
+GlobalManager::ELanguageType ATActor::GetLanguageType()
 {
 	FLanguageJudgmentPreprocessor* lp = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FLanguageJudgmentPreprocessor>();
 	string temp = TCHAR_TO_UTF8(TEXT("The half-width character is the ASCii code of 0~127"));
-	ELanguageType ltype =  lp->GetLanguageType(temp);
+	GlobalManager::ELanguageType ltype =  lp->GetLanguageType(temp);
 	UE_LOG(LOGNLPFORUE,Log,TEXT("语言为(1-zh_CN,2-en_US)：%d"),ltype);
 	return ltype;
 }

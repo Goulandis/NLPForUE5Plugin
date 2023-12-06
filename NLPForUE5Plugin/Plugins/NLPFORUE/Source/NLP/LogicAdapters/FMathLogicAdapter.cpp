@@ -1,14 +1,13 @@
 #include "FMathLogicAdapter.h"
 #include <algorithm>
 #include <fstream>
-#include "NLP/Common/GlobalManager.h"
 #include "NLP/Managers/FPreprocessorFactory.h"
 
 FMathLogicAdapter::FMathLogicAdapter()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FMathLogicAdapter constructed"));
+	NLOG(LOGNLP,Log,TEXT("FMathLogicAdapter constructed"));
 	// 加载词典缓存
-	const std::string Path = GlobalManager::RESOURCE_PATH + GlobalManager::MATHCONFIDEXELEVEL_DICT_PATH;
+	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + GlobalManager::MATHCONFIDEXELEVEL_DICT_PATH;
 	ifstream Ifs(Path.c_str());
 	check(Ifs.is_open());
 	std::string Line;
@@ -53,7 +52,7 @@ FMathLogicAdapter& FMathLogicAdapter::CreateInstance()
 
 FMathLogicAdapter::~FMathLogicAdapter()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FMathLogicAdapter destructed"));
+	NLOG(LOGNLP,Log,TEXT("FMathLogicAdapter destructed"));
 }
 
 // 处理数学问题
@@ -104,7 +103,7 @@ bool FMathLogicAdapter::Process(const std::string& Input,std::string& Output)
 			}
 			else
 			{
-				UE_LOG(LOGNLP,Error,TEXT("Error formula:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+				NLOG(LOGNLP,Error,TEXT("Error formula:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 				return false;
 			}
 		}
@@ -220,7 +219,7 @@ std::string FMathLogicAdapter::Keep2DecimalPlaces(std::string Num)
 {
 	if(!GlobalManager::IsNumber(Num))
 	{
-		UE_LOG(LOGNLP,Error,TEXT("Parameter Num is not number,Num:%s"),*FString(UTF8_TO_TCHAR(Num.c_str())));
+		NLOG(LOGNLP,Error,TEXT("Parameter Num is not number,Num:%s"),*FString(UTF8_TO_TCHAR(Num.c_str())));
 		return "";
 	}
 	std::size_t Pos = Num.find(".");
@@ -304,12 +303,12 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType&
 		if(MaxLen != 0)
 		{
 			Level += 1;
-			UE_LOG(LOGNLP,Log,TEXT("子句匹配成功，置信度+1，子句：%s"),*FString(UTF8_TO_TCHAR(MatchRel.c_str())));
+			NLOG(LOGNLP,Log,TEXT("子句匹配成功，置信度+1，子句：%s"),*FString(UTF8_TO_TCHAR(MatchRel.c_str())));
 		}
 		else
 		{
 			Level -= 1;
-			UE_LOG(LOGNLP,Log,TEXT("子句匹配失败，置信度-1，子句：%s"),*FString(UTF8_TO_TCHAR(MatchRel.c_str())));
+			NLOG(LOGNLP,Log,TEXT("子句匹配失败，置信度-1，子句：%s"),*FString(UTF8_TO_TCHAR(MatchRel.c_str())));
 		}
 	}
 	// 关键词匹配，提取句子中权重最大的关键词，如果关键词存在于关键词词典中，则置信度+1，否者-1
@@ -322,12 +321,12 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType&
 			if(KeyDict.find(TempKeyWords[0].word) != KeyDict.end())
 			{
 				Level += 1;
-				UE_LOG(LOGNLP,Log,TEXT("关键词匹配成功，置信度+1，关键词：%s"),*FString(UTF8_TO_TCHAR(TempKeyWords[0].word.c_str())));
+				NLOG(LOGNLP,Log,TEXT("关键词匹配成功，置信度+1，关键词：%s"),*FString(UTF8_TO_TCHAR(TempKeyWords[0].word.c_str())));
 			}
 			else
 			{
 				Level -= 1;
-				UE_LOG(LOGNLP,Log,TEXT("关键词匹配失败，置信度-1，关键词：%s"),*FString(UTF8_TO_TCHAR(TempKeyWords[0].word.c_str())));
+				NLOG(LOGNLP,Log,TEXT("关键词匹配失败，置信度-1，关键词：%s"),*FString(UTF8_TO_TCHAR(TempKeyWords[0].word.c_str())));
 			}
 		}
 	}
@@ -348,7 +347,7 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType&
 				{
 					Level += 1;
 					bMatchVerb = true;
-					UE_LOG(LOGNLP,Log,TEXT("动词匹配成功，置信度+1，动词：%s"),*FString(UTF8_TO_TCHAR(Pair.first.c_str())));
+					NLOG(LOGNLP,Log,TEXT("动词匹配成功，置信度+1，动词：%s"),*FString(UTF8_TO_TCHAR(Pair.first.c_str())));
 				}
 			}
 			else if(Pair.second == "n" && !bMatchNoun)
@@ -357,7 +356,7 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType&
 				{
 					Level += 1;
 					bMatchNoun = true;
-					UE_LOG(LOGNLP,Log,TEXT("名词匹配成功，置信度+1，名词：%s"),*FString(UTF8_TO_TCHAR(Pair.first.c_str())));
+					NLOG(LOGNLP,Log,TEXT("名词匹配成功，置信度+1，名词：%s"),*FString(UTF8_TO_TCHAR(Pair.first.c_str())));
 				}
 			}
 		}
@@ -369,7 +368,7 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType&
 		if (Str == LocalText)
 		{
 			Level += 2;
-			UE_LOG(LOGNLP,Log,TEXT("完全匹配成功，置信度+2，匹配句子：%s"),*FString(UTF8_TO_TCHAR(Str.c_str())));
+			NLOG(LOGNLP,Log,TEXT("完全匹配成功，置信度+2，匹配句子：%s"),*FString(UTF8_TO_TCHAR(Str.c_str())));
 			break;
 		}
 	}
@@ -403,11 +402,11 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType&
 		}
 		if(Sub == 0)
 		{
-			UE_LOG(LOGNLP,Log,TEXT("最长子句匹配失败，置信度-2，最长匹配句子：%s"),*FString(UTF8_TO_TCHAR(MaxSubString.c_str())));
+			NLOG(LOGNLP,Log,TEXT("最长子句匹配失败，置信度-2，最长匹配句子：%s"),*FString(UTF8_TO_TCHAR(MaxSubString.c_str())));
 		}
 		else
 		{
-			UE_LOG(LOGNLP,Log,TEXT("最长子句匹配成功，置信度+0，最长匹配句子：%s"),*FString(UTF8_TO_TCHAR(MaxSubString.c_str())));
+			NLOG(LOGNLP,Log,TEXT("最长子句匹配成功，置信度+0，最长匹配句子：%s"),*FString(UTF8_TO_TCHAR(MaxSubString.c_str())));
 		}
 	}
 	return Level;	
@@ -572,7 +571,6 @@ std::string FMathLogicAdapter::FindFormulaDescription(const std::string& Text,st
 		if(GlobalManager::IsNumber(Word) || std::regex_search(Word,Pattren))
 		{
 			Tmp += Word;
-			//UE_LOG(LOGNLP,Log,TEXT("Tmp:%s"),*FString(UTF8_TO_TCHAR(Tmp.c_str())));
 		}
 		else
 		{
@@ -620,7 +618,6 @@ std::vector<std::string> FMathLogicAdapter::SplitTextToNum(const std::string& Fo
 
 std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 {
-	UE_LOG(LOGNLP,Log,TEXT("FormulaDescription:%s"),*FString(UTF8_TO_TCHAR(FormulaDescription.c_str())));
 	std::vector<std::string> PrePattrens = {
 		R"([-]?\d+加[-]?\d+的和|\d+加[-]?\d+之和|\d+加上[-]?\d+的和|\d+加上[-]?\d+之和|\d+和[-]?\d+的和|\d+和[-]?\d+之和|\d+与[-]?\d+的和|\d+与[-]?\d+之和)",
 		R"([-]?\d+减[-]?\d+的差|\d+减[-]?\d+之差|\d+减去[-]?\d+的差|\d+减去[-]?\d+之差|\d+和[-]?\d+的差|\d+和[-]?\d+之差|\d+与[-]?\d+的差|\d+与[-]?\d+之差)",
@@ -695,7 +692,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int SubfixNum = std::stoi(TChar);
 							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Add);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
-							UE_LOG(LOGNLP,Log,TEXT("计算加法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP,Log,TEXT("计算加法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 1:
@@ -706,7 +703,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int SubfixNum = std::stoi(TChar);
 							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Sub);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
-							UE_LOG(LOGNLP,Log,TEXT("计算减法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP,Log,TEXT("计算减法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 2:
@@ -717,7 +714,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int SubfixNum = std::stoi(TChar);
 							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Mul);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
-							UE_LOG(LOGNLP,Log,TEXT("计算乘法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP,Log,TEXT("计算乘法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 3:
@@ -728,7 +725,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							float SubfixNum = std::stof(TChar);
 							float RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Div);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
-							UE_LOG(LOGNLP,Log,TEXT("计算除法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP,Log,TEXT("计算除法，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 8:
@@ -739,7 +736,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int SubfixNum = std::stoi(TChar);
 							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Rem);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
-							UE_LOG(LOGNLP,Log,TEXT("计算求余，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP,Log,TEXT("计算求余，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					}
@@ -757,7 +754,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							std::string FormatNum = FormatFloat(std::to_string(RelNum));
 							std::string NumStr = Keep2DecimalPlaces(std::to_string(RelNum));
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),NumStr);
-							UE_LOG(LOGNLP, Log, TEXT("计算平方根，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP, Log, TEXT("计算平方根，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 5:
@@ -768,7 +765,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Rot);
 							std::string NumStr = Keep2DecimalPlaces(std::to_string(RelNum));
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),NumStr);
-							UE_LOG(LOGNLP, Log, TEXT("计算立方根，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP, Log, TEXT("计算立方根，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 6:
@@ -778,7 +775,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int SubfixNum = 2;
 							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Pow);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
-							UE_LOG(LOGNLP,Log,TEXT("计算平方，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP,Log,TEXT("计算平方，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 7:
@@ -788,12 +785,11 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int SubfixNum = 3;
 							int RelNum = SingleOperationFormula(PrefixNum,SubfixNum,GlobalManager::OpeTag::Pow);
 							FormulaDescription.replace(FormulaDescription.find(Formula),Formula.length(),std::to_string(RelNum));
-							UE_LOG(LOGNLP,Log,TEXT("计算立方，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP,Log,TEXT("计算立方，算式:%s"),*FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					}
 				}
-				UE_LOG(LOGNLP,Log,TEXT("FormulaDescription:%s"),*FString(UTF8_TO_TCHAR(FormulaDescription.c_str())));
 			}
 		}
 	}
@@ -858,7 +854,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Add);
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
 							                           std::to_string(RelNum));
-							UE_LOG(LOGNLP, Log, TEXT("计算加法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP, Log, TEXT("计算加法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 1:
@@ -870,7 +866,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Sub);
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
 							                           std::to_string(RelNum));
-							UE_LOG(LOGNLP, Log, TEXT("计算减法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP, Log, TEXT("计算减法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 2:
@@ -882,7 +878,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Mul);
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
 							                           std::to_string(RelNum));
-							UE_LOG(LOGNLP, Log, TEXT("计算乘法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP, Log, TEXT("计算乘法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 3:
@@ -894,7 +890,7 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							float RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Div);
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
 							                           std::to_string(RelNum));
-							UE_LOG(LOGNLP, Log, TEXT("计算除法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP, Log, TEXT("计算除法，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					case 4:
@@ -906,14 +902,13 @@ std::string FMathLogicAdapter::OperationFormula(std::string FormulaDescription)
 							int RelNum = SingleOperationFormula(PrefixNum, SubfixNum, GlobalManager::OpeTag::Rem);
 							FormulaDescription.replace(FormulaDescription.find(Formula), Formula.length(),
 							                           std::to_string(RelNum));
-							UE_LOG(LOGNLP, Log, TEXT("计算求余，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
+							NLOG(LOGNLP, Log, TEXT("计算求余，算式:%s"), *FString(UTF8_TO_TCHAR(Formula.c_str())));
 						}
 						break;
 					}
 				}
 			}
 		}
-		UE_LOG(LOGNLP, Log, TEXT("FormulaDescription:%s"), *FString(UTF8_TO_TCHAR(FormulaDescription.c_str())));
 	}
 	// 排除中文算式描述提取时，部分提取词对最终答案的干扰
 	if(GlobalManager::IsChinese(FormulaDescription))

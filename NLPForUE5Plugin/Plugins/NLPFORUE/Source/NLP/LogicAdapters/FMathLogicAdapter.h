@@ -4,7 +4,6 @@
 #include <set>
 #include "FLogicAdapter.h"
 #include "CoreMinimal.h"
-#include "NLP/Common/GlobalManager.h"
 
 struct OpeAndInd
 {

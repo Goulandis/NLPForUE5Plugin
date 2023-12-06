@@ -5,7 +5,7 @@
 FWeatherLogicAdapter::FWeatherLogicAdapter()
 {
 	InitCityAdcode();
-	UE_LOG(LOGNLP,Log,TEXT("FWeatherLogicAdapter constructed"));
+	NLOG(LOGNLP,Log,TEXT("FWeatherLogicAdapter constructed"));
 }
 
 FWeatherLogicAdapter& FWeatherLogicAdapter::CreateInstance()
@@ -16,7 +16,7 @@ FWeatherLogicAdapter& FWeatherLogicAdapter::CreateInstance()
 
 FWeatherLogicAdapter::~FWeatherLogicAdapter()
 {
-	UE_LOG(LOGNLP,Log,TEXT("FWeatherLogicAdapter destructed"));
+	NLOG(LOGNLP,Log,TEXT("FWeatherLogicAdapter destructed"));
 }
 
 bool FWeatherLogicAdapter::Process(const std::string& Input, std::string& Output)
@@ -105,7 +105,7 @@ bool FWeatherLogicAdapter::IsAskWeather(const std::string& Text,std::string& Mat
 	}
 	if(MatchTag.empty())
 	{
-		UE_LOG(LOGNLP,Log,TEXT("没有匹配的天气询问词性组合，当前文本词性:%s"),*TOFSTR(TextTag));
+		NLOG(LOGNLP,Log,TEXT("没有匹配的天气询问词性组合，当前文本词性:%s"),*TOFSTR(TextTag));
 		return false;
 	}
 	const char* SplitChr = " ";
@@ -164,7 +164,7 @@ std::string FWeatherLogicAdapter::GetCityFromText(const std::string& Text)
 			}
 		}
 	}
-	UE_LOG(LOGNLP,Error,TEXT("There are no place names in the text %s"),*DebugLog::Log(Text));
+	NLOG(LOGNLP,Error,TEXT("There are no place names in the text %s"),*TOFSTR(Text));
 	return CityName;
 }
 
@@ -188,11 +188,8 @@ void FWeatherLogicAdapter::GetDateFromText(std::tm& Tm,std::string& Text)
 		else if(MatchsT[0] == "明天")
 		{
 			Tm = GlobalManager::GetNowLocalTime();
-			UE_LOG(LOGNLP,Log,TEXT("Tm1:%s"),*TOFSTR(GlobalManager::TmToString(Tm)));
 			TimePeriod.tm_mday = 1;
-			UE_LOG(LOGNLP,Log,TEXT("TimePeriod:%s"),*TOFSTR(GlobalManager::TmToString(TimePeriod)));
 			Tm = GlobalManager::TimeOperator(Tm,TimePeriod);
-			UE_LOG(LOGNLP,Log,TEXT("Tm2:%s"),*TOFSTR(GlobalManager::TmToString(Tm)));
 		}
 		else if(MatchsT[0] == "后天")
 		{
@@ -221,7 +218,7 @@ void FWeatherLogicAdapter::GetDateFromText(std::tm& Tm,std::string& Text)
 		}
 		else
 		{
-			UE_LOG(LOGNLP,Error,TEXT("Date format error : %s  Words.size=%d"),*TOFSTR(Text),(int)Words.size());
+			NLOG(LOGNLP,Error,TEXT("Date format error : %s  Words.size=%d"),*TOFSTR(Text),(int)Words.size());
 		}
 	}
 	// 如果日期是中文数字形式，如：二零二三年十一月二十一日
@@ -261,7 +258,7 @@ void FWeatherLogicAdapter::GetDateFromText(std::tm& Tm,std::string& Text)
 		}
 		else
 		{
-			UE_LOG(LOGNLP,Error,TEXT("Date format error : %s NumWords.size=%d"),*TOFSTR(Text),(int)NumWords.size());
+			NLOG(LOGNLP,Error,TEXT("Date format error : %s NumWords.size=%d"),*TOFSTR(Text),(int)NumWords.size());
 		}
 	}
 	// 如果没有明确的时间提示词，则去当前日期
@@ -288,7 +285,7 @@ std::string FWeatherLogicAdapter::GetWeatherInfo(const std::string& City, const 
 	nlohmann::json Root = nlohmann::json::parse(Res->body);
 	if(Root.is_null())
 	{
-		UE_LOG(LOGNLP,Error,TEXT("Failed to cast json string to nlohmann::json"));
+		NLOG(LOGNLP,Error,TEXT("Failed to cast json string to nlohmann::json"));
 		return JsonStr;
 	}
 	nlohmann::json Forecasts = Root.at("forecasts");
@@ -324,7 +321,7 @@ std::string FWeatherLogicAdapter::GetWeatherInfo(const std::string& City, const 
 	}
 	if(JsonStr.empty())
 	{
-		UE_LOG(LOGNLP,Error,TEXT("Json value is null,Json:%s"),*TOFSTR(Res->body));
+		NLOG(LOGNLP,Error,TEXT("Json value is null,Json:%s"),*TOFSTR(Res->body));
 	}
 	return JsonStr;
 }
@@ -354,14 +351,14 @@ std::string FWeatherLogicAdapter::GetCityAdcode(const std::string& City)
 			return Pai.second.Adcode;
 		}
 	}
-	UE_LOG(LOGNLP,Error,TEXT("City %s does not exist in the list"),*DebugLog::Log(City));
+	NLOG(LOGNLP,Error,TEXT("City %s does not exist in the list"),*TOFSTR(City));
 	return "";
 }
 
 void FWeatherLogicAdapter::InitCityAdcode()
 {
 	std::ifstream Ifs;
-	const std::string Path = GlobalManager::RESOURCE_PATH + GlobalManager::CITYADCODEXLSX_PATH;
+	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + GlobalManager::CITYADCODEXLSX_PATH;
 	Ifs.open(Path.c_str());
 	check(Ifs.is_open());
 	std::string Line;
@@ -389,7 +386,7 @@ void FWeatherLogicAdapter::InitCityAdcode()
 		}
 		else
 		{
-			UE_LOG(LOGNLP,Error,TEXT("The contents of the file %s are malformed"),*DebugLog::Log(Path));
+			NLOG(LOGNLP,Error,TEXT("The contents of the file %s are malformed"),*TOFSTR(Path));
 		}
 	}
 	Ifs.close();
