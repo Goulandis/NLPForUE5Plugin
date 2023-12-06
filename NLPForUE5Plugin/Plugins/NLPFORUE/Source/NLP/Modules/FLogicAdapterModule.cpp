@@ -1,5 +1,5 @@
 #include "FLogicAdapterModule.h"
-#include "NLP/Common/LogDefine.h"
+#include "NLP/Common/GlobalManager.h"
 
 FLogicAdapterModule::FLogicAdapterModule()
 {

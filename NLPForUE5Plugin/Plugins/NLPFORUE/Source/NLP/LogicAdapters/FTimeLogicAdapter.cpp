@@ -1,5 +1,5 @@
 #include "FTimeLogicAdapter.h"
-#include "NLP/Common/LogDefine.h"
+#include "NLP/Common/GlobalManager.h"
 
 FTimeLogicAdapter::FTimeLogicAdapter()
 {

@@ -1,6 +1,6 @@
 #include "FSensitiveWordPreprocessor.h"
 #include <fstream>
-#include "NLP/Common/LogDefine.h"
+#include "NLP/Common/GlobalManager.h"
 
 DFATree::DFATree(const vector<string>& sensitive_words)
 {
@@ -166,8 +166,6 @@ void FSensitiveWordPreprocessor::LoadSensitiveWordDict(const string& Path)
 		UE_LOG(LOGNLP,Error,TEXT("There is no set dictionary of sensitive words"));
 	}
 	size_t Len = SensitiveWords.size();
-	UE_LOG(LOGNLP,Error,TEXT("SensitiveWords Len:%d"),(int)Len);
-	
 	DfaTree = new DFATree(SensitiveWords);
 	Ifs.close();
 }

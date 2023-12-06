@@ -1,0 +1,21 @@
+{
+	"WeatherLogicAdapter":
+	{
+		"WeatherInfoHttpRequest":
+		{
+			"Gd":
+			{
+				"Url":"restapi.amap.com",
+				"Key":"62aac7f2fbe5a09d9c69f611d238034b",
+				"Extensions":"all",
+				"WebSubfix":"/v3/weather/weatherInfo"
+			}
+		},
+		"CityAdcodeDictPath":"Dicts/CityAdcode",
+		"AskWeahterTextTagDictPath":"Dicts/AskWeahterTextTag"
+	},
+	"MathLogicAdapter":
+	{
+		"MathConfideceLevelDictPath":"Dicts/MathConfideceLevel"
+	}
+}

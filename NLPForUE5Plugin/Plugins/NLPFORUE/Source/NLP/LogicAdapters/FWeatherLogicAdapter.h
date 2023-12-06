@@ -2,7 +2,8 @@
 #include "FLogicAdapter.h"
 #include "CoreMinimal.h"
 #include <map>
-#include "NLP/Common/GlobalManager.h"
+#include "nlohmann/json.hpp"
+
 
 struct CityAdcode
 {
@@ -25,10 +26,12 @@ public:
 	std::string GetCityFromText(const std::string& Text);
 	void GetDateFromText(std::tm& Tm,std::string& Text);
 	// 从获取天气信息
-	//Json::Value GetWeatherInfo(const std::string& City,const std::tm& Date);
+	std::string GetWeatherInfo(const std::string& City,const std::tm& Date);
+	// 根据获取到天气信息生成相应的回答
+	std::string SpawnWeatherLogicAdapterAnswer(std::string& JsonStr,const std::string& City);
 	// 从城市编码列表中寻找指定名称的城市编码
 	std::string GetCityAdcode(const std::string& City);
-	//std::string SpawnWeatherLogicAdapterAnswer(const Json::Value& Value,const std::string& City);
+	
 private:
 	FWeatherLogicAdapter();
 	void InitCityAdcode();

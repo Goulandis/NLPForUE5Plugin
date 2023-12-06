@@ -1,7 +1,7 @@
 ﻿#ifndef PRRPDEFINE
 #define PRRPDEFINE
 
-#define TOFSTR(Str) FString(UTF8_TO_TCHAR(Str.c_str())) 
+//#define TOFSTR(Str) FString(UTF8_TO_TCHAR(Str.c_str())) 
 
 // 词性宏
 #define CX_M "m" // 数词

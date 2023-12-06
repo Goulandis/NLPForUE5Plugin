@@ -1,10 +1,9 @@
 #include "TActor.h"
 #include "NLPFORUE/Common/FDefine.h"
-#include "NLP/Common/LogDefine.h"
-//#include "NLP/Common/GlobalManager.h"
+#include "NLP/Common/GlobalManager.h"
 #include <regex>
-//#include "jsoncpp2/json/json-forwards.h"
-//#include "jsoncpp2/json/json.h"
+#include "rapidjson/writer.h"
+#include "NLP/Common/ConfigManager.h"
 
 
 DEFINE_LOG_CATEGORY(LOGNLP);
@@ -14,10 +13,7 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	//wla->Process(Input,Output);
-
-	//Json::Value Va;
-	
+	ConfigManager::CreateInstance();
 	
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;

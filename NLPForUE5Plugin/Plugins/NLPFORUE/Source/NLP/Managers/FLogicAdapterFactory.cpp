@@ -1,5 +1,5 @@
 #include "FLogicAdapterFactory.h"
-#include "NLP/Common/LogDefine.h"
+#include "NLP/Common/GlobalManager.h"
 
 FLogicAdapterFactory* FLogicAdapterFactory::Instance = nullptr;
 

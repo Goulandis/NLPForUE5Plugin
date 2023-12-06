@@ -1,7 +1,6 @@
 #include "FMathLogicAdapter.h"
 #include <algorithm>
 #include <fstream>
-#include "NLP/Common/LogDefine.h"
 #include "NLP/Common/GlobalManager.h"
 #include "NLP/Managers/FPreprocessorFactory.h"
 
@@ -9,7 +8,7 @@ FMathLogicAdapter::FMathLogicAdapter()
 {
 	UE_LOG(LOGNLP,Log,TEXT("FMathLogicAdapter constructed"));
 	// 加载词典缓存
-	const std::string Path = GlobalManager::ResourcePath + MATHCONFIDEXELEVEL_DICT_PATH;
+	const std::string Path = GlobalManager::RESOURCE_PATH + GlobalManager::MATHCONFIDEXELEVEL_DICT_PATH;
 	ifstream Ifs(Path.c_str());
 	check(Ifs.is_open());
 	std::string Line;

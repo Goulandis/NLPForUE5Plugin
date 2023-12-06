@@ -1,7 +1,6 @@
 #include "FWeatherLogicAdapter.h"
 #include <fstream>
 #include "cpp-httplib/httplib.h"
-#include <sstream>
 
 FWeatherLogicAdapter::FWeatherLogicAdapter()
 {
@@ -28,14 +27,12 @@ bool FWeatherLogicAdapter::Process(const std::string& Input, std::string& Output
 	{
 		// 提取城市
 		std::string City = GetCityFromText(MatchText);
-		// 提取城市编码
-		//std::string Adcode = GetCityAdcode(City);
 		// 提取时间
 		std::tm Date = {0};
 		GetDateFromText(Date,MatchText);
 		// 获取指定时间地点的天气信息
-		//Json::Value WeatherInfo = GetWeatherInfo(City,Date);
-		//Output = SpawnWeatherLogicAdapterAnswer(WeatherInfo,City);
+		std::string WeatherInfo = GetWeatherInfo(City,Date);
+		Output = SpawnWeatherLogicAdapterAnswer(WeatherInfo,City);
 	}
 	return true;
 }
@@ -50,6 +47,9 @@ bool FWeatherLogicAdapter::IsAskWeather(const std::string& Text,std::string& Mat
 		"ns t m uj n",
 		"ns t m m uj n",
 		"ns x m m m uj n",
+		"ns m m uj n ",
+		"ns m m m m x m uj n",
+		"ns i uj n",
 		"ns l",
 		"ns uj l",
 		"ns t uj l",
@@ -60,7 +60,27 @@ bool FWeatherLogicAdapter::IsAskWeather(const std::string& Text,std::string& Mat
 		"t m ns uj n",
 		"t m ns uj l",
 		"t m m ns uj n",
-		"t m m ns uj l"
+		"t m m ns uj l",
+		"nz m m uj n ",
+		"nz n",
+		"nz uj n",
+		"nz t uj n",
+		"nz t m uj n",
+		"nz t m m uj n",
+		"nz x m m m uj n",
+		"nz m m m m x m uj n",
+		"nz i uj n",
+		"nz l",
+		"nz uj l",
+		"nz t uj l",
+		"nz t m uj l",
+		"nz t m m uj l",
+		"t nz uj l",
+		"t nz uj n",
+		"t m nz uj n",
+		"t m nz uj l",
+		"t m m nz uj n",
+		"t m m nz uj l",
 	};
 	std::vector<std::pair<std::string,std::string>> Words;
 	GlobalManager::jieba.Tag(Text,Words);
@@ -130,14 +150,22 @@ std::string FWeatherLogicAdapter::GetCityFromText(const std::string& Text)
 	std::vector<int> IndexVec;
 	for(std::pair<std::string,std::string> Word : Words)
 	{
-		if(Word.second == "ns")
+		if(Word.second == "ns" || Word.second == "nz")
 		{
-			CityName = Word.first;
-			return CityName;
+			std::map<std::string,CityAdcode>::iterator It = CityAdcodeMap.find(Word.first);
+			// 在城市列表中寻找包含关键词的地名
+			for(std::pair<std::string,CityAdcode> Pai : CityAdcodeMap)
+			{
+				if(Pai.first.find(Word.first) != std::string::npos)
+				{
+					CityName = Pai.first;
+					return CityName;
+				}
+			}
 		}
 	}
 	UE_LOG(LOGNLP,Error,TEXT("There are no place names in the text %s"),*DebugLog::Log(Text));
-	return "";
+	return CityName;
 }
 
 void FWeatherLogicAdapter::GetDateFromText(std::tm& Tm,std::string& Text)
@@ -160,8 +188,11 @@ void FWeatherLogicAdapter::GetDateFromText(std::tm& Tm,std::string& Text)
 		else if(MatchsT[0] == "明天")
 		{
 			Tm = GlobalManager::GetNowLocalTime();
+			UE_LOG(LOGNLP,Log,TEXT("Tm1:%s"),*TOFSTR(GlobalManager::TmToString(Tm)));
 			TimePeriod.tm_mday = 1;
+			UE_LOG(LOGNLP,Log,TEXT("TimePeriod:%s"),*TOFSTR(GlobalManager::TmToString(TimePeriod)));
 			Tm = GlobalManager::TimeOperator(Tm,TimePeriod);
+			UE_LOG(LOGNLP,Log,TEXT("Tm2:%s"),*TOFSTR(GlobalManager::TmToString(Tm)));
 		}
 		else if(MatchsT[0] == "后天")
 		{
@@ -175,6 +206,7 @@ void FWeatherLogicAdapter::GetDateFromText(std::tm& Tm,std::string& Text)
 			TimePeriod.tm_mday = 3;
 			Tm = GlobalManager::TimeOperator(Tm,TimePeriod);
 		}
+		
 	}
 	// 如果日期是阿拉伯数字格形式，如：2023年11月21日
 	else if(std::regex_search(Text,MatchsNum,PattrenNum))
@@ -239,46 +271,77 @@ void FWeatherLogicAdapter::GetDateFromText(std::tm& Tm,std::string& Text)
 	}
 }
 
-// Json::Value FWeatherLogicAdapter::GetWeatherInfo(const std::string& City, const std::tm& Date)
-// {
-// 	// 获取城市编码
-// 	std::string Adcode = GetCityAdcode(City);
-// 	// 向高德平台发起https的get请求
-// 	httplib::Client HttpClient("restapi.amap.com");
-// 	httplib::Params Params;
-// 	Params.emplace("key","62aac7f2fbe5a09d9c69f611d238034b");
-// 	Params.emplace("city",Adcode);
-// 	Params.emplace("extensions","all");
-// 	httplib::Headers Heard = {{"Content-Type","application/x-www-from-urlencoded"}};
-// 	httplib::Result Res = HttpClient.Get("/v3/weather/weatherInfo",Params,Heard);
-// 	Json::Value Root = GlobalManager::ReadJsonFromString(Res->body);
-// 	Json::Value Value;
-// 	if(!Root.empty())
-// 	{
-// 		Json::Value Forecasts = Root["forecasts"];
-// 		if(!Forecasts.empty())
-// 		{
-// 			Json::Value Casts = Forecasts[0]["casts"];
-// 			if(!Casts.empty())
-// 			{
-// 				for(int i=0;i<(int)Casts.size();++i)
-// 				{
-// 					Value = Casts[i];
-// 					std::tm Tm = GlobalManager::StringToTm(Value["date"].asString());
-// 					if(Tm.tm_year == Date.tm_year && Tm.tm_mon == Date.tm_mon && Tm.tm_mday == Date.tm_mday)
-// 					{
-// 						return Value;
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// 	if(Value.empty())
-// 	{
-// 		UE_LOG(LOGNLP,Error,TEXT("Json value is null,Json:%s"),*TOFSTR(Root.asString()));
-// 	}
-// 	return Value;
-// }
+std::string FWeatherLogicAdapter::GetWeatherInfo(const std::string& City, const std::tm& Date)
+{
+	// 获取城市编码
+	std::string Adcode = GetCityAdcode(City);
+	// 向高德平台发起https的get请求，查询指定城市今天、明天、后天和大后天的天气信息
+	httplib::Client HttpClient("restapi.amap.com");
+	httplib::Params Params;
+	Params.emplace("key","62aac7f2fbe5a09d9c69f611d238034b");
+	Params.emplace("city",Adcode);
+	Params.emplace("extensions","all");
+	httplib::Headers Heard = {{"Content-Type","application/x-www-from-urlencoded"}};
+	httplib::Result Res = HttpClient.Get("/v3/weather/weatherInfo",Params,Heard);
+	// 解析从高德平台过去到的天气信息Json字符串
+	std::string JsonStr;
+	nlohmann::json Root = nlohmann::json::parse(Res->body);
+	if(Root.is_null())
+	{
+		UE_LOG(LOGNLP,Error,TEXT("Failed to cast json string to nlohmann::json"));
+		return JsonStr;
+	}
+	nlohmann::json Forecasts = Root.at("forecasts");
+	if(Forecasts.is_array() && Forecasts.size() > 0)
+	{
+		nlohmann::json Casts;
+		// 寻找匹配城市的天气信息(高德支持同时查询多个城市的天气信息)
+		for(int i=0;i<Forecasts.size();++i)
+		{
+			std::string FCity = Forecasts[i].at("city");
+			if(City == Forecasts[i].at("city"))
+			{
+				Casts = Forecasts[i].at("casts");
+				break;
+			}
+		}
+		if(Casts.is_array() && Casts.size() > 0)
+		{
+			for(int i=0;i<Casts.size();++i)
+			{
+				if(!Casts[i].is_object())
+				{
+					break;
+				}
+				// 获取指定日期的天气信息
+				std::tm Tm = GlobalManager::StringToTm(Casts[i].at("date"));
+				if (Tm.tm_year == Date.tm_year && Tm.tm_mon == Date.tm_mon && Tm.tm_mday == Date.tm_mday)
+				{
+					JsonStr = Casts[i].dump();
+				}
+			}
+		}
+	}
+	if(JsonStr.empty())
+	{
+		UE_LOG(LOGNLP,Error,TEXT("Json value is null,Json:%s"),*TOFSTR(Res->body));
+	}
+	return JsonStr;
+}
+
+std::string FWeatherLogicAdapter::SpawnWeatherLogicAdapterAnswer(std::string& JsonStr, const std::string& City)
+{
+	if(JsonStr.empty())
+	{
+		return "没有查询到天气信息";
+	}
+	std::stringstream Fmt;
+	nlohmann::json Root = nlohmann::json::parse(JsonStr);
+	Fmt<<City<<Root.at("date")<<"的天气情况：\n"<<"白天：\n";
+	Fmt<<"天气："<<Root.at("dayweather")<<"，温度："<<Root.at("daytemp")<<"，风向："<<Root.at("daywind")<<"，风力："<<Root.at("daypower")<<"\n";
+	Fmt<<"夜间：\n天气："<<Root.at("nightweather")<<"，温度："<<Root.at("nighttemp")<<"，风向："<<Root.at("nightwind")<<"，风力："<<Root.at("nightpower")<<"\n";
+	return Fmt.str();
+}
 
 std::string FWeatherLogicAdapter::GetCityAdcode(const std::string& City)
 {
@@ -298,7 +361,7 @@ std::string FWeatherLogicAdapter::GetCityAdcode(const std::string& City)
 void FWeatherLogicAdapter::InitCityAdcode()
 {
 	std::ifstream Ifs;
-	const std::string Path = GlobalManager::ResourcePath + CITYADCODEXLSX_PATH;
+	const std::string Path = GlobalManager::RESOURCE_PATH + GlobalManager::CITYADCODEXLSX_PATH;
 	Ifs.open(Path.c_str());
 	check(Ifs.is_open());
 	std::string Line;
@@ -306,12 +369,22 @@ void FWeatherLogicAdapter::InitCityAdcode()
 	{
 		const char* SplitChr = "\t";
 		std::vector<std::string> LineVec = GlobalManager::SplitString(Line,SplitChr);
-		if(LineVec.size() == 3)
+		if(LineVec.size() >= 2)
 		{
 			CityAdcode Code;
-			std::string Name = LineVec[0];
-			Code.Adcode = LineVec[1];
-			Code.Citycode = LineVec[2];
+			std::string Name;
+			if(LineVec.size() == 3)
+			{
+				Name = LineVec[0];
+				Code.Adcode = LineVec[1];
+				Code.Citycode = LineVec[2];
+			}
+			else if(LineVec.size() == 2)
+			{
+				Name = LineVec[0];
+				Code.Adcode = LineVec[1];
+				Code.Citycode = -1;
+			}
 			CityAdcodeMap.insert(std::pair<std::string,CityAdcode>(Name,Code));
 		}
 		else
@@ -321,23 +394,3 @@ void FWeatherLogicAdapter::InitCityAdcode()
 	}
 	Ifs.close();
 }
-
-// std::string FWeatherLogicAdapter::SpawnWeatherLogicAdapterAnswer(const Json::Value& Value,const std::string& City)
-// {
-// 	std::stringstream Fmt;
-// 	//Value.get("date","null").asString();
-// 	//Fmt<<City<<Value.get("date","null").asString()<<"的天气情况：\n"<<"白天：\n";
-// 	//std::string DayWeather = Value.get("dayweather","null").asString();
-// 	// std::string NightWeather = Value["nightweather"].asString();
-// 	// std::string DayTemp = Value["daytemp"].asString();
-// 	// std::string NightTemp = Value["nighttemp"].asString();
-// 	// std::string DayWind = Value["daywind"].asString();
-// 	// std::string NightWind = Value["nightwind"].asString();
-// 	// std::string DayPower = Value["daypower"].asString();
-// 	// std::string NightPower = Value["nightpower"].asString();
-// 	// Fmt<<"天气："<<DayWeather<<"，温度："<<DayTemp<<"，风向："<<DayWind<<"，风力："<<DayPower<<"\n";
-// 	// Fmt<<"夜间：\n天气："<<NightWeather<<"，温度："<<NightTemp<<"，风向："<<NightWind<<"，风力："<<NightPower<<"\n";
-// 	//return Fmt.str();
-//
-// 	return "";
-// }

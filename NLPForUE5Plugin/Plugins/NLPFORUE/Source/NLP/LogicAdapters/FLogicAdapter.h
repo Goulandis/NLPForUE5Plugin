@@ -3,6 +3,7 @@
 #pragma once
 #include "Define.h"
 #include "CoreMinimal.h"
+#include "NLP/Common/GlobalManager.h"
 
 /**
  * 

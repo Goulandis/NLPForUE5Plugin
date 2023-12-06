@@ -1,5 +1,5 @@
 ﻿#include "NLP.h"
-#include "NLP/Common/LogDefine.h"
+#include "NLP/Common/GlobalManager.h"
 
 IMPLEMENT_PRIMARY_GAME_MODULE(FNLP,NLP,"NLP");
 

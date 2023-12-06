@@ -5,7 +5,6 @@
 #include "FLogicAdapter.h"
 #include "CoreMinimal.h"
 #include "NLP/Common/GlobalManager.h"
-#include "NLP/Common/LogDefine.h"
 
 struct OpeAndInd
 {

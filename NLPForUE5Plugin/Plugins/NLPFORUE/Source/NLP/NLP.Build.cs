@@ -21,7 +21,7 @@ public class NLP : ModuleRules
 			"Core",
 			"CoreUObject",
 			"Engine",
-			"InputCore",
+			"InputCore"
 		});
 		//PrivateDependencyModuleNames.AddRange();
 		
@@ -30,10 +30,8 @@ public class NLP : ModuleRules
 			Path.Combine(ModulePath,"../cppjieba/include"),
 			Path.Combine(ModulePath,"../cppjieba/deps/limonp/include"),
 			Path.Combine(ModulePath, "../cpp-httplib"),
-			//Path.Combine(ModulePath, "../jsoncpp/src"),
-			//Path.Combine(ModulePath, "../jsoncpp/include/json"),
-			Path.Combine(ModulePath, "../jsoncpp2"),
-			Path.Combine(ModulePath, "../jsoncpp2/json")
+			Path.Combine(ModulePath, "../rapidjson"),
+			Path.Combine(ModulePath, "../nlohmann"),
 		});
 	}
 }

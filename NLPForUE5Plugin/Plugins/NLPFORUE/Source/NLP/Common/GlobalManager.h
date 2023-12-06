@@ -3,14 +3,13 @@
 
 #include "cppjieba/Jieba.hpp"
 #include "NLP/Preprossors/Define.h"
-#include "NLP/LogicAdapters/Define.h"
-#include "LogDefine.h"
+//#include "NLP/LogicAdapters/Define.h"
+#include "UEManager.h"
 #include <regex>
 #include <time.h>
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include "cpp-httplib/httplib.h"
-//#include "jsoncpp/json/json.h"
 
 // Global debug functions
 namespace DebugLog
@@ -47,8 +46,15 @@ namespace GlobalManager
 		Pow,// 求幂
 		Rot,// 取根
 	};
+
+	// 逻辑适配器配置文件相对路径
+	const char* const LOGICADAPTER_CONFIG_PATH = "Config/LogicAdapter.json";
+	// 数学置信度文件相对路径
+	const char* const MATHCONFIDEXELEVEL_DICT_PATH = "Dicts/MathConfideceLevel";
+	// 中国城市编码列表文件相对路径
+	const char* const CITYADCODEXLSX_PATH = "Dicts/CityAdcode";
+
 	
-	const std::string ResourcePath = TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + RESOURCE_PATH));
 	// 结巴分词库全局实例
 	inline cppjieba::Jieba jieba(
 	TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + DICT_PATH)),
@@ -187,7 +193,7 @@ namespace GlobalManager
 			}
 			Mon = Time1.tm_mon + Time2.tm_mon;
 			if(bDay){Mon+=1;bDay=false;}
-			if(Mon >= 12)
+			if(Mon > 12)
 			{
 				Mon -= 12;
 				bMon = true;

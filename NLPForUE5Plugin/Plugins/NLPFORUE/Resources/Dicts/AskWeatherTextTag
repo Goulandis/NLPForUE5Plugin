@@ -1,0 +1,40 @@
+ns n
+ns uj n
+ns t uj n
+ns t m uj n
+ns t m m uj n
+ns x m m m uj n
+ns m m uj n 
+ns m m m m x m uj n
+ns i uj n
+ns l
+ns uj l
+ns t uj l
+ns t m uj l
+ns t m m uj l
+t ns uj l
+t ns uj n
+t m ns uj n
+t m ns uj l
+t m m ns uj n
+t m m ns uj l
+nz m m uj n 
+nz n
+nz uj n
+nz t uj n
+nz t m uj n
+nz t m m uj n
+nz x m m m uj n
+nz m m m m x m uj n
+nz i uj n
+nz l
+nz uj l
+nz t uj l
+nz t m uj l
+nz t m m uj l
+t nz uj l
+t nz uj n
+t m nz uj n
+t m nz uj l
+t m m nz uj n
+t m m nz uj l

@@ -1,5 +1,4 @@
 #include "FLanguageJudgmentPreprocessor.h"
-#include "NLP/Common/LogDefine.h"
 #include "NLP/Common/GlobalManager.h"
 
 FLanguageJudgmentPreprocessor::FLanguageJudgmentPreprocessor()
