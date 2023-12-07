@@ -9,6 +9,11 @@ public:
 	static FTimeLogicAdapter& CreateInstance();
 	
 	~FTimeLogicAdapter();
+
+	bool Process(const std::string& Input,const std::string& Output);
+	bool IsAskTime(const std::string& Text);
+
+	std::wstring StringToWideString(const std::string& Str);
 private:
 	FTimeLogicAdapter();
 };

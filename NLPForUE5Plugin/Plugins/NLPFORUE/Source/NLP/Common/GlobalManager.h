@@ -286,7 +286,7 @@ namespace GlobalManager
 			}
 			else
 			{
-				NLOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*TOFSTR(TimeStr));
+				NLOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*TOFS(TimeStr));
 				return Time;
 			}
 			std::vector<std::string> TimeVec;
@@ -300,7 +300,7 @@ namespace GlobalManager
 			}
 			else
 			{
-				NLOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*TOFSTR(TimeStr));
+				NLOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*TOFS(TimeStr));
 				return Time;
 			}
 		}
@@ -315,7 +315,7 @@ namespace GlobalManager
 				Time.tm_mday = std::stoi(DateVec[2]);
 				return Time;
 			}
-			NLOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*TOFSTR(TimeStr));
+			NLOG(LOGNLP,Error,TEXT("The time format is wrong : %s"),*TOFS(TimeStr));
 			return Time;
 		}
 	}

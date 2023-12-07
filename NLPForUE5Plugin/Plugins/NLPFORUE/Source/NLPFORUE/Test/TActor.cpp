@@ -5,6 +5,7 @@
 #include "rapidjson/writer.h"
 #include "NLP/Common/ConfigManager.h"
 
+#include <Windows.h>
 
 DEFINE_LOG_CATEGORY(LOGNLP);
 
@@ -13,9 +14,8 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	//ConfigManager::CreateInstance();
-	//wla->Process(Input,Output);
-	mla->Process(Input,Output);
+	tla->IsAskTime(Input);
+	
 	
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;
@@ -28,6 +28,7 @@ ATActor::ATActor()
 	PrimaryActorTick.bCanEverTick = true;
 	mla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FMathLogicAdapter>();
 	wla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FWeatherLogicAdapter>();
+	tla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FTimeLogicAdapter>();
 }
 
 ATActor::~ATActor()

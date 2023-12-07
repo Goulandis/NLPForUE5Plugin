@@ -68,7 +68,7 @@ bool FWeatherLogicAdapter::IsAskWeather(const std::string& Text,std::string& Mat
 	}
 	if(MatchTag.empty())
 	{
-		NLOG(LOGNLP,Log,TEXT("没有匹配的天气询问词性组合，当前文本词性:%s"),*TOFSTR(TextTag));
+		NLOG(LOGNLP,Log,TEXT("没有匹配的天气询问词性组合，当前文本词性:%s"),*TOFS(TextTag));
 		return false;
 	}
 	const char* SplitChr = " ";
@@ -127,7 +127,7 @@ std::string FWeatherLogicAdapter::GetCityFromText(const std::string& Text)
 			}
 		}
 	}
-	NLOG(LOGNLP,Error,TEXT("There are no place names in the text %s"),*TOFSTR(Text));
+	NLOG(LOGNLP,Error,TEXT("There are no place names in the text %s"),*TOFS(Text));
 	return CityName;
 }
 
@@ -181,7 +181,7 @@ void FWeatherLogicAdapter::GetDateFromText(std::tm& Tm,std::string& Text)
 		}
 		else
 		{
-			NLOG(LOGNLP,Error,TEXT("Date format error : %s  Words.size=%d"),*TOFSTR(Text),(int)Words.size());
+			NLOG(LOGNLP,Error,TEXT("Date format error : %s  Words.size=%d"),*TOFS(Text),(int)Words.size());
 		}
 	}
 	// 如果日期是中文数字形式，如：二零二三年十一月二十一日
@@ -221,7 +221,7 @@ void FWeatherLogicAdapter::GetDateFromText(std::tm& Tm,std::string& Text)
 		}
 		else
 		{
-			NLOG(LOGNLP,Error,TEXT("Date format error : %s NumWords.size=%d"),*TOFSTR(Text),(int)NumWords.size());
+			NLOG(LOGNLP,Error,TEXT("Date format error : %s NumWords.size=%d"),*TOFS(Text),(int)NumWords.size());
 		}
 	}
 	// 如果没有明确的时间提示词，则去当前日期
@@ -286,7 +286,7 @@ std::string FWeatherLogicAdapter::GetWeatherInfo(const std::string& City, const 
 	}
 	if(JsonStr.empty())
 	{
-		NLOG(LOGNLP,Error,TEXT("Json value is null,Json:%s"),*TOFSTR(Res->body));
+		NLOG(LOGNLP,Error,TEXT("Json value is null,Json:%s"),*TOFS(Res->body));
 	}
 	return JsonStr;
 }
@@ -316,7 +316,7 @@ std::string FWeatherLogicAdapter::GetCityAdcode(const std::string& City)
 			return Pai.second.Adcode;
 		}
 	}
-	NLOG(LOGNLP,Error,TEXT("City %s does not exist in the list"),*TOFSTR(City));
+	NLOG(LOGNLP,Error,TEXT("City %s does not exist in the list"),*TOFS(City));
 	return "";
 }
 
@@ -327,7 +327,7 @@ void FWeatherLogicAdapter::InitCityAdcode()
 	std::ifstream Ifs(Path);
 	if(!Ifs.is_open())
 	{
-		NLOG(LOGNLP,Error,TEXT("Failed to open the file : %s"),*TOFSTR(Path));
+		NLOG(LOGNLP,Error,TEXT("Failed to open the file : %s"),*TOFS(Path));
 		Ifs.close();
 		return;
 	}
@@ -356,7 +356,7 @@ void FWeatherLogicAdapter::InitCityAdcode()
 		}
 		else
 		{
-			NLOG(LOGNLP,Error,TEXT("The contents of the file %s are malformed"),*TOFSTR(Path));
+			NLOG(LOGNLP,Error,TEXT("The contents of the file %s are malformed"),*TOFS(Path));
 		}
 	}
 	Ifs.close();
@@ -369,7 +369,7 @@ void FWeatherLogicAdapter::InitAskWeatherTextTag()
 	std::ifstream Ifs(Path);
 	if(!Ifs.is_open())
 	{
-		NLOG(LOGNLP,Error,TEXT("Failed to open the file : %s"),*TOFSTR(Path));
+		NLOG(LOGNLP,Error,TEXT("Failed to open the file : %s"),*TOFS(Path));
 		Ifs.close();
 		return;
 	}

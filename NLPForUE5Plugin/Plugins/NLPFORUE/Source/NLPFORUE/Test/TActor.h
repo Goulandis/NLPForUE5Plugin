@@ -52,4 +52,5 @@ private:
 	TSharedPtr<FPreprocessorModule> MPrep;
 	FMathLogicAdapter* mla;
 	FWeatherLogicAdapter* wla;
+	FTimeLogicAdapter* tla;
 };

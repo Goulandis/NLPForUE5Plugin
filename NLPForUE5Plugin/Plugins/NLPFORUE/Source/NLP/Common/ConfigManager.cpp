@@ -20,7 +20,7 @@ ConfigManager::ConfigManager()
 	}
 	else
 	{
-		NLOG(LOGNLP,Error,TEXT("Failed to open the file : %s"),*TOFSTR(Path));
+		NLOG(LOGNLP,Error,TEXT("Failed to open the file : %s"),*TOFS(Path));
 	}
 	Ifs.close();
 }
@@ -29,7 +29,7 @@ void ConfigManager::InitConfigObject()
 {
 	if(!Config.is_object())
 	{
-		NLOG(LOGNLP,Error,TEXT("Object Config is not a json : %s"),*TOFSTR(Config.dump()));
+		NLOG(LOGNLP,Error,TEXT("Object Config is not a json : %s"),*TOFS(Config.dump()));
 		return;
 	}
 	WeahterLogicAdapterConfig = Config.at("WeatherLogicAdapter");

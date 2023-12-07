@@ -1,7 +1,8 @@
 ﻿#ifndef LOG_LOGNLP
 #define LOG_LOGNLP
 DECLARE_LOG_CATEGORY_EXTERN(LOGNLP, All, All)
-#define TOFSTR(Str) FString(UTF8_TO_TCHAR(Str.c_str()))
+#define TOFS(Str) FString(UTF8_TO_TCHAR(Str.c_str()))
+#define WSTOFS(WStr) FString(WStr.c_str())
 #define PROJECTPLUGINDIR FPaths::ProjectPluginsDir()
 #define TOUTF8(Param) TCHAR_TO_UTF8(Param)
 #define NLOG(CategoryName,Verbosity,Format,...) UE_PRIVATE_LOG(PREPROCESSOR_NOTHING, constexpr, CategoryName, Verbosity, Format, ##__VA_ARGS__)
@@ -14,7 +15,7 @@ namespace GlobalManager
 
 	class UEManager
 	{
-	public:
+		public:
 	
 	};
 }
