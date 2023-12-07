@@ -13,9 +13,9 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	ConfigManager::CreateInstance();
-	std::string a = "a";
-	NLOG(LOGNLP,Log,TEXT("%s"),*TOFSTR(a));
+	//ConfigManager::CreateInstance();
+	//wla->Process(Input,Output);
+	mla->Process(Input,Output);
 	
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;

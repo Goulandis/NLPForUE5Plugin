@@ -35,7 +35,10 @@ public:
 private:
 	FWeatherLogicAdapter();
 	void InitCityAdcode();
+	void InitAskWeatherTextTag();
 
 	// 存储城市编码的map
 	std::map<std::string,CityAdcode> CityAdcodeMap;
+	// 询问天气的文本应该包含的词性顺序vector
+	std::vector<std::string> AskWeatherTextTagVec;
 };

@@ -7,36 +7,39 @@ FMathLogicAdapter::FMathLogicAdapter()
 {
 	NLOG(LOGNLP,Log,TEXT("FMathLogicAdapter constructed"));
 	// 加载词典缓存
-	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + GlobalManager::MATHCONFIDEXELEVEL_DICT_PATH;
-	ifstream Ifs(Path.c_str());
-	check(Ifs.is_open());
-	std::string Line;
-	while(getline(Ifs,Line))
+	std::string MathConfideceLevelDictPath = ConfigManager::CreateInstance().MathLogicAdapterConfig.at("MathConfideceLevelDictPath");
+	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + MathConfideceLevelDictPath;
+	ifstream Ifs(Path);
+	if(Ifs.is_open())
 	{
-		// 行提取
-		LineDict.push_back(Line);
-		// 关键词提取
-		std::vector<cppjieba::KeywordExtractor::Word> TempKeyWords;
-		GlobalManager::jieba.extractor.ExtractContainStopWord(Line,TempKeyWords,1);
-		if(TempKeyWords.size() != 0)
+		std::string Line;
+		while(getline(Ifs,Line))
 		{
-			KeyDict.insert(TempKeyWords[0].word);
-		}
-		// 动词、名词、数词提取
-		for(std::string Tmp : LineDict)
-		{
-			vector<std::pair<std::string,std::string>> Tagers;
-			GlobalManager::jieba.Tag(Tmp,Tagers);
-			for(std::pair<std::string,std::string> Pair : Tagers)
+			// 行提取
+			LineDict.push_back(Line);
+			// 关键词提取
+			std::vector<cppjieba::KeywordExtractor::Word> TempKeyWords;
+			GlobalManager::jieba.extractor.ExtractContainStopWord(Line,TempKeyWords,1);
+			if(TempKeyWords.size() != 0)
 			{
-				if(Pair.second == CX_V)
+				KeyDict.insert(TempKeyWords[0].word);
+			}
+			// 动词、名词、数词提取
+			for(std::string Tmp : LineDict)
+			{
+				vector<std::pair<std::string,std::string>> Tagers;
+				GlobalManager::jieba.Tag(Tmp,Tagers);
+				for(std::pair<std::string,std::string> Pair : Tagers)
 				{
-					VerbDict.insert(Pair.first);
-					continue;
-				}
-				if(Pair.second == CX_N)
-				{
-					NounDict.insert(Pair.first);
+					if(Pair.second == CX_V)
+					{
+						VerbDict.insert(Pair.first);
+						continue;
+					}
+					if(Pair.second == CX_N)
+					{
+						NounDict.insert(Pair.first);
+					}
 				}
 			}
 		}

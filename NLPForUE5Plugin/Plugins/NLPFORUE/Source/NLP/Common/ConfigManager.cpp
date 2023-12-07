@@ -1,6 +1,7 @@
 #include "ConfigManager.h"
 #include <fstream>
 #include "GlobalManager.h"
+#include "NLP/LogicAdapters/FWeatherLogicAdapter.h"
 
 ConfigManager& ConfigManager::CreateInstance()
 {
@@ -10,18 +11,30 @@ ConfigManager& ConfigManager::CreateInstance()
 
 ConfigManager::ConfigManager()
 {
-	
-	std::ifstream Ifs(GlobalManager::RESOURCE_ABSOLUTE_PATH + GlobalManager::LOGICADAPTER_CONFIG_PATH);
+	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + GlobalManager::CONFIG_PATH;
+	std::ifstream Ifs(Path);
 	if(Ifs.is_open())
 	{
-		Ifs >> LogicAdapterConfig;
-		std::string JsonStr = LogicAdapterConfig.dump();
-		UE_LOG(LOGNLP,Log,TEXT("Config:%s"),*TOFSTR(JsonStr));
+		Ifs >> Config;
+		InitConfigObject();
 	}
 	else
 	{
-		UE_LOG(LOGNLP,Log,TEXT("无法打开文件:../../../Resources/Config/LogicAdapter.json"));
+		NLOG(LOGNLP,Error,TEXT("Failed to open the file : %s"),*TOFSTR(Path));
 	}
+	Ifs.close();
+}
+
+void ConfigManager::InitConfigObject()
+{
+	if(!Config.is_object())
+	{
+		NLOG(LOGNLP,Error,TEXT("Object Config is not a json : %s"),*TOFSTR(Config.dump()));
+		return;
+	}
+	WeahterLogicAdapterConfig = Config.at("WeatherLogicAdapter");
+	MathLogicAdapterConfig = Config.at("MathLogicAdapter");
+	SensitiveWordPreprocessorConfig = Config.at("SensitiveWordPreprocessor");
 }
 
 ConfigManager::~ConfigManager()

@@ -1,4 +1,7 @@
 {	
+	"SensitiveWordPreprocessor":{
+		"SensitiveWordPath":"textfilter/keywords"
+	},
 	"WeatherLogicAdapter": {
 		"WeatherInfoHttpRequest": {
 			"Gd": {
@@ -9,7 +12,7 @@
 			}
 		},
 		"CityAdcodeDictPath": "Dicts/CityAdcode",
-		"AskWeahterTextTagDictPath": "Dicts/AskWeahterTextTag"
+		"AskWeatherTextTagDictPath": "Dicts/AskWeatherTextTag"
 	},
 	"MathLogicAdapter": {
 		"MathConfideceLevelDictPath": "Dicts/MathConfideceLevel"

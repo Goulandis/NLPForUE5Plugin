@@ -7,9 +7,13 @@ class NLP_API ConfigManager
 public:
 	static ConfigManager& CreateInstance();
 	~ConfigManager();
+
+	nlohmann::json Config;
+
+	nlohmann::json SensitiveWordPreprocessorConfig;
+	nlohmann::json WeahterLogicAdapterConfig;
+	nlohmann::json MathLogicAdapterConfig;
 private:
 	ConfigManager();
-
-	nlohmann::json LogicAdapterConfig;
-	nlohmann::json PreprocessorConfig;
+	void InitConfigObject();
 };

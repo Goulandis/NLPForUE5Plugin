@@ -1,15 +1,18 @@
 ﻿#ifndef GLOBALMANAGER
 #define GLOBALMANAGER
 
-#include "cppjieba/Jieba.hpp"
-#include "UEManager.h"
 #include <regex>
 #include <time.h>
 #include <string>
 #include <vector>
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+
 #include "cpp-httplib/httplib.h"
+#include "cppjieba/Jieba.hpp"
+
+#include "UEManager.h"
+#include "ConfigManager.h"
 
 // 词性宏
 #define CX_M "m" // 数词
@@ -47,12 +50,8 @@ namespace GlobalManager
 	// 资源路径
 	const char* const RESOURCE_PATH = "NLPFORUE/Resources/";
 	const char* const SOURCE_PATH = "NLPFORUE/Source/";
-	// 逻辑适配器配置文件相对路径
-	const char* const LOGICADAPTER_CONFIG_PATH = "Config/LogicAdapter.json";
-	// 数学置信度文件相对路径
-	const char* const MATHCONFIDEXELEVEL_DICT_PATH = "Dicts/MathConfideceLevel";
-	// 中国城市编码列表文件相对路径
-	const char* const CITYADCODEXLSX_PATH = "Dicts/CityAdcode";
+	// 全局配置文件相对路径
+	const char* const CONFIG_PATH = "Config/Config";
 	// 结巴分词字典文件相对路径
 	const char* const DICT_PATH = "cppjieba/dict/jieba.dict.utf8";
 	// 结巴分词hmm模型配置文件相对路径
@@ -63,19 +62,8 @@ namespace GlobalManager
 	const char* const IDF_PATH = "cppjieba/dict/idf.utf8";
 	// 结巴分词停用词文件相对路径
 	const char* const STOP_WORD_PATH = "cppjieba/dict/stop_words.utf8";
-	// 敏感词文件相对路径
-	const char* const SENSITIVE_WORD_PATH = "NLPFORUE/Resources/textfilter/keywords";
-
 	
 	// 结巴分词库全局实例
-	// inline cppjieba::Jieba jieba(
-	// TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + DICT_PATH)),
-	// TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + HMM_PATH)),
-	// TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + USER_DICT_PATH)),
-	// TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + IDF_PATH)),
-	// TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + SOURCE_PATH + STOP_WORD_PATH))
-	// );
-	
 	inline cppjieba::Jieba jieba(
 		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + DICT_PATH)),
 		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + HMM_PATH)),
@@ -83,7 +71,6 @@ namespace GlobalManager
 		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + IDF_PATH)),
 		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + STOP_WORD_PATH))
 	);
-
 	// 判断字符串是否匹配数学算式
 	inline bool RegexMathFormulas(const std::string& Text)
 	{

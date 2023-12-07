@@ -3,11 +3,11 @@
 
 FPreprocessorModule::FPreprocessorModule()
 {
-	FString SensitiveWordDictPath = FPaths::ProjectPluginsDir() + GlobalManager::SENSITIVE_WORD_PATH;
-	string SensitiveWordDictPathCStr = TCHAR_TO_UTF8(*SensitiveWordDictPath);
-	NLOG(LOGNLP,Log,TEXT("Loading sensitive word from %s"),*SensitiveWordDictPath);
-	FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSensitiveWordPreprocessor>()->LoadSensitiveWordDict(SensitiveWordDictPathCStr);
-	NLOG(LOGNLP,Log,TEXT("Loaded sensitive word from %s"),*SensitiveWordDictPath);
+	std::string SensitiveWordPath = ConfigManager::CreateInstance().SensitiveWordPreprocessorConfig.at("SensitiveWordPath");
+	const std::string SensitiveWordDictPath = GlobalManager::RESOURCE_ABSOLUTE_PATH + SensitiveWordPath;
+	NLOG(LOGNLP,Log,TEXT("Loading sensitive word from %s"),*TOFSTR(SensitiveWordDictPath));
+	FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSensitiveWordPreprocessor>()->LoadSensitiveWordDict(SensitiveWordDictPath);
+	NLOG(LOGNLP,Log,TEXT("Loaded sensitive word from %s"),*TOFSTR(SensitiveWordDictPath));
 	NLOG(LOGNLP,Log,TEXT("FPreprocessorModule constructed"));
 }
 

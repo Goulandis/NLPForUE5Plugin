@@ -5,6 +5,7 @@
 FWeatherLogicAdapter::FWeatherLogicAdapter()
 {
 	InitCityAdcode();
+	InitAskWeatherTextTag();
 	NLOG(LOGNLP,Log,TEXT("FWeatherLogicAdapter constructed"));
 }
 
@@ -39,49 +40,11 @@ bool FWeatherLogicAdapter::Process(const std::string& Input, std::string& Output
 
 bool FWeatherLogicAdapter::IsAskWeather(const std::string& Text,std::string& MatchText)
 {
-	// 询问天气得文本应该包含的词性顺序
-	std::vector<std::string> AskWeatherTextTagVec = {
-		"ns n",
-		"ns uj n",
-		"ns t uj n",
-		"ns t m uj n",
-		"ns t m m uj n",
-		"ns x m m m uj n",
-		"ns m m uj n ",
-		"ns m m m m x m uj n",
-		"ns i uj n",
-		"ns l",
-		"ns uj l",
-		"ns t uj l",
-		"ns t m uj l",
-		"ns t m m uj l",
-		"t ns uj l",
-		"t ns uj n",
-		"t m ns uj n",
-		"t m ns uj l",
-		"t m m ns uj n",
-		"t m m ns uj l",
-		"nz m m uj n ",
-		"nz n",
-		"nz uj n",
-		"nz t uj n",
-		"nz t m uj n",
-		"nz t m m uj n",
-		"nz x m m m uj n",
-		"nz m m m m x m uj n",
-		"nz i uj n",
-		"nz l",
-		"nz uj l",
-		"nz t uj l",
-		"nz t m uj l",
-		"nz t m m uj l",
-		"t nz uj l",
-		"t nz uj n",
-		"t m nz uj n",
-		"t m nz uj l",
-		"t m m nz uj n",
-		"t m m nz uj l",
-	};
+	if(AskWeatherTextTagVec.size() == 0)
+	{
+		NLOG(LOGNLP,Error,TEXT("AskWeatherTextTagVec.size() == 0"));
+		return false;
+	}
 	std::vector<std::pair<std::string,std::string>> Words;
 	GlobalManager::jieba.Tag(Text,Words);
 	std::string TextTag;
@@ -272,14 +235,16 @@ std::string FWeatherLogicAdapter::GetWeatherInfo(const std::string& City, const 
 {
 	// 获取城市编码
 	std::string Adcode = GetCityAdcode(City);
+	// 读取高德平台https的get请求配置
+	nlohmann::json Gd = ConfigManager::CreateInstance().WeahterLogicAdapterConfig.at("WeatherInfoHttpRequest").at("Gd");
 	// 向高德平台发起https的get请求，查询指定城市今天、明天、后天和大后天的天气信息
-	httplib::Client HttpClient("restapi.amap.com");
+	httplib::Client HttpClient(Gd.at("Url"));
 	httplib::Params Params;
-	Params.emplace("key","62aac7f2fbe5a09d9c69f611d238034b");
+	Params.emplace("key",Gd.at("Key"));
 	Params.emplace("city",Adcode);
-	Params.emplace("extensions","all");
+	Params.emplace("extensions",Gd.at("Extensions"));
 	httplib::Headers Heard = {{"Content-Type","application/x-www-from-urlencoded"}};
-	httplib::Result Res = HttpClient.Get("/v3/weather/weatherInfo",Params,Heard);
+	httplib::Result Res = HttpClient.Get(Gd.at("WebSubfix"),Params,Heard);
 	// 解析从高德平台过去到的天气信息Json字符串
 	std::string JsonStr;
 	nlohmann::json Root = nlohmann::json::parse(Res->body);
@@ -334,7 +299,7 @@ std::string FWeatherLogicAdapter::SpawnWeatherLogicAdapterAnswer(std::string& Js
 	}
 	std::stringstream Fmt;
 	nlohmann::json Root = nlohmann::json::parse(JsonStr);
-	Fmt<<City<<Root.at("date")<<"的天气情况：\n"<<"白天：\n";
+	Fmt<<"\n"<<City<<Root.at("date")<<"的天气情况：\n"<<"白天：\n";
 	Fmt<<"天气："<<Root.at("dayweather")<<"，温度："<<Root.at("daytemp")<<"，风向："<<Root.at("daywind")<<"，风力："<<Root.at("daypower")<<"\n";
 	Fmt<<"夜间：\n天气："<<Root.at("nightweather")<<"，温度："<<Root.at("nighttemp")<<"，风向："<<Root.at("nightwind")<<"，风力："<<Root.at("nightpower")<<"\n";
 	return Fmt.str();
@@ -357,10 +322,15 @@ std::string FWeatherLogicAdapter::GetCityAdcode(const std::string& City)
 
 void FWeatherLogicAdapter::InitCityAdcode()
 {
-	std::ifstream Ifs;
-	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + GlobalManager::CITYADCODEXLSX_PATH;
-	Ifs.open(Path.c_str());
-	check(Ifs.is_open());
+	std::string CityAdcodeDictPath = ConfigManager::CreateInstance().WeahterLogicAdapterConfig.at("CityAdcodeDictPath");
+	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + CityAdcodeDictPath;
+	std::ifstream Ifs(Path);
+	if(!Ifs.is_open())
+	{
+		NLOG(LOGNLP,Error,TEXT("Failed to open the file : %s"),*TOFSTR(Path));
+		Ifs.close();
+		return;
+	}
 	std::string Line;
 	while (std::getline(Ifs,Line))
 	{
@@ -388,6 +358,25 @@ void FWeatherLogicAdapter::InitCityAdcode()
 		{
 			NLOG(LOGNLP,Error,TEXT("The contents of the file %s are malformed"),*TOFSTR(Path));
 		}
+	}
+	Ifs.close();
+}
+
+void FWeatherLogicAdapter::InitAskWeatherTextTag()
+{
+	std::string AskWeahterTextTagDictPath = ConfigManager::CreateInstance().WeahterLogicAdapterConfig.at("AskWeatherTextTagDictPath");
+	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + AskWeahterTextTagDictPath;
+	std::ifstream Ifs(Path);
+	if(!Ifs.is_open())
+	{
+		NLOG(LOGNLP,Error,TEXT("Failed to open the file : %s"),*TOFSTR(Path));
+		Ifs.close();
+		return;
+	}
+	std::string Line;
+	while (std::getline(Ifs,Line))
+	{
+		AskWeatherTextTagVec.push_back(Line);
 	}
 	Ifs.close();
 }
