@@ -139,12 +139,12 @@ void FWeatherLogicAdapter::GetDateFromText(std::tm& Tm,std::string& Text)
 	std::string PrefixCN = R"([零一二三四五六七八九]+年[零一二三四五六七八九十]+月[零一二三四五六七八九十]+)";
 	PattrenNum = PrefixNum + "日|" + PrefixNum + "号|" + PrefixNum;
 	PattrenCN = PrefixCN + "日|" + PrefixCN + "号|" + PrefixCN;
-	PattrenT = R"(今天|明天|后天|大后天)";
+	PattrenT = R"(今天|明天|后天|大后天|现在)";
 	// 如果日期是时间代词
 	if(std::regex_search(Text,MatchsT,PattrenT) && MatchsT.size() > 0)
 	{
 		std::tm TimePeriod = {0};
-		if(MatchsT[0] == "今天")
+		if(MatchsT[0] == "今天" | MatchsT[0] == "现在")
 		{
 			Tm = GlobalManager::GetNowLocalTime();
 		}

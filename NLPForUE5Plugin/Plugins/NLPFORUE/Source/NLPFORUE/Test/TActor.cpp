@@ -14,7 +14,7 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	tla->IsAskTime(Input);
+	//tla->IsAskTime(Input);
 	
 	
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));

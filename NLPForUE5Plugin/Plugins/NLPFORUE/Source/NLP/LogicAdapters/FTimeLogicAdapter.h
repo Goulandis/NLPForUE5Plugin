@@ -11,9 +11,8 @@ public:
 	~FTimeLogicAdapter();
 
 	bool Process(const std::string& Input,const std::string& Output);
-	bool IsAskTime(const std::string& Text);
-
-	std::wstring StringToWideString(const std::string& Str);
+	bool IsAskTime(const std::string& Text,std::string& MatchStr);
+	std::tm GetTimeFromText(const std::string& Text);
 private:
 	FTimeLogicAdapter();
 };
