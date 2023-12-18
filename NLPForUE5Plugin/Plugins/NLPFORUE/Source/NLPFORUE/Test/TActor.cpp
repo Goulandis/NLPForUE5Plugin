@@ -2,10 +2,6 @@
 #include "NLPFORUE/Common/FDefine.h"
 #include "NLP/Common/GlobalManager.h"
 #include <regex>
-#include "rapidjson/writer.h"
-#include "NLP/Common/ConfigManager.h"
-
-#include <Windows.h>
 
 DEFINE_LOG_CATEGORY(LOGNLP);
 
@@ -14,8 +10,7 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	//tla->IsAskTime(Input);
-	
+	wla->Process(Input,Output);
 	
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;

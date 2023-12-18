@@ -6,13 +6,15 @@
 class NLP_API FTimeLogicAdapter : public FLogicAdapter
 {
 public:
+	enum EAskType { Date,Week,Time };
 	static FTimeLogicAdapter& CreateInstance();
 	
 	~FTimeLogicAdapter();
 
-	bool Process(const std::string& Input,const std::string& Output);
-	bool IsAskTime(const std::string& Text,std::string& MatchStr);
+	bool Process(const std::string& Input,std::string& Output);
+	bool IsAskTime(const std::string& Text,std::string& MatchStr,EAskType& AskType);
 	std::tm GetTimeFromText(const std::string& Text);
+	std::string SpawnAnswer(const std::tm& Time,const EAskType AskType);
 private:
 	FTimeLogicAdapter();
 };

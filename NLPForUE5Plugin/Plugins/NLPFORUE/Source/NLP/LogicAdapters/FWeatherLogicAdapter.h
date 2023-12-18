@@ -23,13 +23,16 @@ public:
 	bool IsAskWeather(const std::string& Text,std::string& MatchText);
 	// 从一句文本中提取地名，只提取第一个获取到的地名
 	std::string GetCityFromText(const std::string& Text);
-	void GetDateFromText(std::tm& Tm,std::string& Text);
+	// 从文本中提取日期信息
+	void GetDateFromText(std::tm& Tm,const std::string& Text);
+	void GetDateFromText2(std::tm& Tm,const std::string& Text);
 	// 从获取天气信息
 	std::string GetWeatherInfo(const std::string& City,const std::tm& Date);
 	// 根据获取到天气信息生成相应的回答
 	std::string SpawnWeatherLogicAdapterAnswer(std::string& JsonStr,const std::string& City);
 	// 从城市编码列表中寻找指定名称的城市编码
 	std::string GetCityAdcode(const std::string& City);
+	bool IsRightDate(const std::tm Date);
 	
 private:
 	FWeatherLogicAdapter();

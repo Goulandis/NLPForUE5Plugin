@@ -13,6 +13,7 @@
 
 #include "UEManager.h"
 #include "ConfigManager.h"
+#include "Math/UnitConversion.h"
 
 // 词性宏
 #define CX_M "m" // 数词
@@ -267,6 +268,29 @@ namespace GlobalManager
 		RelTime.tm_min = Min;
 		RelTime.tm_sec = Sec;
 		return RelTime;
+	}
+	// 比较两个std::tm格式的时间的大小，返回-1表示Time1<Time2，返回1表示Time1>Time2,返回0表示Time1=Time2
+	inline int TmCompare(const std::tm Time1,const std::tm Time2)
+	{
+		int Year = Time1.tm_year - Time2.tm_year;
+		int Mon = Time1.tm_mon - Time2.tm_mon;
+		int Day = Time1.tm_mday - Time2.tm_mday;
+		int Hour = Time1.tm_hour - Time2.tm_hour;
+		int Min = Time1.tm_min - Time2.tm_min;
+		int Sec = Time1.tm_sec - Time2.tm_sec;
+		if(Year < 0){return -1;}
+		if(Year > 0){return 1;}
+		if(Mon < 0){return -1;}
+		if(Mon > 0){return 1;}
+		if(Day < 0){return -1;}
+		if(Day > 0){return 1;}
+		if(Hour < 0){return -1;}
+		if(Hour > 0){return 1;}
+		if(Min < 0){return -1;}
+		if(Min > 0){return 1;}
+		if(Sec < 0){return -1;}
+		if(Sec > 0){return 1;}
+		return 0;
 	}
 	// 时间字符串转Tm，时间字符串格式为：xxxx-xx-xx xx:xx:xx
 	inline std::tm StringToTm(const std::string& TimeStr)

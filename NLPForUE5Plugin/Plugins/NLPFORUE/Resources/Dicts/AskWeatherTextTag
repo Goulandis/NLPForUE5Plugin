@@ -3,17 +3,29 @@ ns uj n
 ns t uj n
 ns t m uj n
 ns t m m uj n
+ns m uj n
+ns m m m m uj n
 ns x m m m uj n
-ns m m uj n 
+ns m v r n
+ns m m v r n
+ns x m m m v r n
+ns m m uj n
 ns m m m m x m uj n
+ns m m v r n
+ns m m m m v r n
+ns m m m m m m v r n
 ns i uj n
 ns l
 ns uj l
 ns t uj l
 ns t m uj l
+ns t v r n
+ns i v r n
 ns t m m uj l
 t ns uj l
 t ns uj n
+t ns v r n
+i ns v r n
 t m ns uj n
 t m ns uj l
 t m m ns uj n
