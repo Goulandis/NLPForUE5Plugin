@@ -30,22 +30,34 @@ t m ns uj n
 t m ns uj l
 t m m ns uj n
 t m m ns uj l
-nz m m uj n 
 nz n
 nz uj n
 nz t uj n
 nz t m uj n
 nz t m m uj n
+nz m uj n
+nz m m m m uj n
 nz x m m m uj n
+nz m v r n
+nz m m v r n
+nz x m m m v r n
+nz m m uj n
 nz m m m m x m uj n
+nz m m v r n
+nz m m m m v r n
+nz m m m m m m v r n
 nz i uj n
 nz l
 nz uj l
 nz t uj l
 nz t m uj l
+nz t v r n
+nz i v r n
 nz t m m uj l
 t nz uj l
 t nz uj n
+t nz v r n
+i nz v r n
 t m nz uj n
 t m nz uj l
 t m m nz uj n

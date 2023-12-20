@@ -9,8 +9,8 @@ public:
 	
 	~FStopWordFilteringPreprocessor();
 	
-	vector<string> StopWordFiltering(string Text);
-	vector<string> StopWordFiltering(vector<string> Words);
+	std::string StopWordFiltering(string Text);
+	std::string StopWordFiltering(vector<string> Words);
 private:
 	FStopWordFilteringPreprocessor();
 };

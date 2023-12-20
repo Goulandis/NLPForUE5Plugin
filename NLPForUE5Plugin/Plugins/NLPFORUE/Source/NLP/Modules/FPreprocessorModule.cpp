@@ -3,10 +3,15 @@
 
 FPreprocessorModule::FPreprocessorModule()
 {
+	Prep_LanguageJudgment = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FLanguageJudgmentPreprocessor>();
+	Prep_SensitiveWord = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSensitiveWordPreprocessor>();
+	Prep_SpecialSymbol = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSpecialSymbolPreprocessor>();
+	Prep_StopWord = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FStopWordFilteringPreprocessor>();
+	
 	std::string SensitiveWordPath = ConfigManager::CreateInstance().SensitiveWordPreprocessorConfig.at("SensitiveWordPath");
 	const std::string SensitiveWordDictPath = GlobalManager::RESOURCE_ABSOLUTE_PATH + SensitiveWordPath;
 	NLOG(LOGNLP,Log,TEXT("Loading sensitive word from %s"),*TOFS(SensitiveWordDictPath));
-	FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSensitiveWordPreprocessor>()->LoadSensitiveWordDict(SensitiveWordDictPath);
+	Prep_SensitiveWord->LoadSensitiveWordDict(SensitiveWordDictPath);
 	NLOG(LOGNLP,Log,TEXT("Loaded sensitive word from %s"),*TOFS(SensitiveWordDictPath));
 	NLOG(LOGNLP,Log,TEXT("FPreprocessorModule constructed"));
 }
@@ -16,19 +21,21 @@ FPreprocessorModule::~FPreprocessorModule()
 	NLOG(LOGNLP,Log,TEXT("FPreprocessorModule destructed"));
 }
 
-TArray<FString> FPreprocessorModule::Handle(FString& Text) const
+void FPreprocessorModule::Handle(const std::string& Input,std::string& Output,const SConfig& InConfig)
 {
-	string TextLocal = TCHAR_TO_UTF8(*Text);
-	string RelTmp;
-	vector<string> RelVec;
-	TArray<FString> RelTArr;
-	GlobalManager::ELanguageType LType = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FLanguageJudgmentPreprocessor>()->GetLanguageType(TextLocal);
+	ModuleConfig(InConfig);
+	Output = Input;
+	GlobalManager::ELanguageType LType = GlobalManager::ELanguageType::None;
+	if(Config.bLanguageJudgment)
+	{
+		LType = Prep_LanguageJudgment->GetLanguageType(Output);
+	}
 	switch (LType)
 	{
 	case GlobalManager::ELanguageType::zh_CN:
-		RelTmp = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSensitiveWordPreprocessor>()->SensitiveWordFiltering(TextLocal);
-		RelTmp = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSpecialSymbolPreprocessor>()->DeteleSpecialSymbol(RelTmp);
-		RelVec = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FStopWordFilteringPreprocessor>()->StopWordFiltering(RelTmp);
+		if(Config.bSensitiveWord) Output = Prep_SensitiveWord->SensitiveWordFiltering(Output);
+		if(Config.bSpecialSymbol) Output = Prep_SpecialSymbol->DeteleSpecialSymbol(Output);
+		if(Config.bStopWord) Output = Prep_StopWord->StopWordFiltering(Output);
 		break;;
 	case GlobalManager::ELanguageType::zh_HK:
 		break;
@@ -37,9 +44,9 @@ TArray<FString> FPreprocessorModule::Handle(FString& Text) const
 	default:
 		break;
 	}
-	for(string Str : RelVec)
-	{
-		RelTArr.Add(UTF8_TO_TCHAR(Str.c_str()));
-	}
-	return RelTArr;
+}
+
+void FPreprocessorModule::ModuleConfig(const SConfig& InConfig)
+{
+	Config = InConfig;
 }

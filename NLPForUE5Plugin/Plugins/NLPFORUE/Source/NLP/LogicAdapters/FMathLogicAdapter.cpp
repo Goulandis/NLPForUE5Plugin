@@ -61,15 +61,14 @@ FMathLogicAdapter::~FMathLogicAdapter()
 // 处理数学问题
 bool FMathLogicAdapter::Process(const std::string& Input,std::string& Output)
 {
-	std::string Sentence = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSpecialSymbolPreprocessor>()->DeleteSpaceSymbol(Input);
 	std::vector<std::string> Words;
-	GlobalManager::jieba.Cut(Sentence,Words);
-	bool bContainChinese = GlobalManager::IsChinese(Sentence);
-	bool bMatchRegex = GlobalManager::RegexMathFormulas(Sentence);
-	bool bContainMathWord = ContainMathWord(Sentence);
+	GlobalManager::jieba.Cut(Input,Words);
+	bool bContainChinese = GlobalManager::IsChinese(Input);
+	bool bMatchRegex = GlobalManager::RegexMathFormulas(Input);
+	bool bContainMathWord = ContainMathWord(Input);
 	//bool bContianUnit = ContainUnit(Sentence);
 
-	HandleType Type = HandleType::Formula;
+	HandleType Type = HandleType::None;
 	if(!bContainChinese){Type = HandleType::Formula;}
 	else if(bContainChinese && bMatchRegex){Type = HandleType::FormulaAndChinese;}
 	else if(bContainChinese && !bMatchRegex && bContainMathWord){Type = HandleType::Chinese;}
@@ -127,8 +126,8 @@ bool FMathLogicAdapter::Process(const std::string& Input,std::string& Output)
 				Formula.replace(Formula.find(Pai.first),Pai.first.length(),std::to_string(Pai.second));
 			}
 			Output = OperationFormula(Formula);
+			return true;
 		}
-		
 	}
 	return false;
 }

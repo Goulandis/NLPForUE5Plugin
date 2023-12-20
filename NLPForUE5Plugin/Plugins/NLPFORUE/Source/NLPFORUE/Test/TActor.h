@@ -3,9 +3,9 @@
 #pragma once
 #include "NLP/Modules/FPreprocessorModule.h"
 #include "NLP/Managers/FLogicAdapterFactory.h"
-#include "cppjieba/Jieba.hpp"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "NLP/Modules/FLogicAdapterModule.h"
 #include "TActor.generated.h"
 
 UCLASS()
@@ -26,21 +26,15 @@ protected:
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString CWS(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
-	TArray<FString> StopWordFiltering(FString Text);
-	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString SensitiveWordFiltering(FString Text);
-	UFUNCTION(BlueprintCallable,Category="TActor")
-	FString PreprocessorModuleTest(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString TestJiebaTag(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString TestJiebaExtract(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
-	bool RegexTest(FString Text);
+	void PreprocessorTest(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
-	bool IsNumber(FString NumStr);
-	UFUNCTION(BlueprintCallable,Category="TActor")
-	FString MathLogicAdapter(FString Question);
+	FString PrepAndLoapConformity(FString Text);
 
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString ComTest(FString Text);
@@ -50,7 +44,5 @@ public:
 
 private:
 	TSharedPtr<FPreprocessorModule> MPrep;
-	FMathLogicAdapter* mla;
-	FWeatherLogicAdapter* wla;
-	FTimeLogicAdapter* tla;
+	TSharedPtr<FLogicAdapterModule> MLoap;
 };

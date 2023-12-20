@@ -10,8 +10,10 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	wla->Process(Input,Output);
-	
+	std::string Tmp;
+	MPrep->Handle(Input,Tmp,FPreprocessorModule::SConfig(true,true,true,false));
+	MLoap->Handle(Tmp,Output);
+
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;
 }
@@ -21,9 +23,8 @@ ATActor::ATActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	mla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FMathLogicAdapter>();
-	wla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FWeatherLogicAdapter>();
-	tla = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FTimeLogicAdapter>();
+	MPrep = MakeShareable(new FPreprocessorModule());
+	MLoap = MakeShareable(new FLogicAdapterModule());
 }
 
 ATActor::~ATActor()
@@ -117,17 +118,6 @@ FString ATActor::CWS(FString Text)
 	return "";
 }
 
-TArray<FString> ATActor::StopWordFiltering(FString Text)
-{
-	FStopWordFilteringPreprocessor* sw = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FStopWordFilteringPreprocessor>();
-	vector<string> StopWords = sw->StopWordFiltering(TCHAR_TO_UTF8(*Text));
-	TArray<FString> Rel;
-	for(string tmp : StopWords)
-	{
-		Rel.Add(FString(UTF8_TO_TCHAR(tmp.c_str())));
-	}
-	return Rel;
-}
 
 FString ATActor::SensitiveWordFiltering(FString Text)
 {
@@ -138,16 +128,6 @@ FString ATActor::SensitiveWordFiltering(FString Text)
 	return FString(UTF8_TO_TCHAR(Rel.c_str()));
 }
 
-FString ATActor::PreprocessorModuleTest(FString Text)
-{
-	MPrep = MakeShareable(new FPreprocessorModule());
-	FString Rel;
-	for(FString Str : MPrep->Handle(Text))
-	{
-		Rel += TEXT("\'") + Str + TEXT("\' ");
-	}
-	return Rel;
-}
 
 FString ATActor::TestJiebaTag(FString Text)
 {
@@ -182,34 +162,27 @@ FString ATActor::TestJiebaExtract(FString Text)
 	return FString(UTF8_TO_TCHAR(Rel.c_str()));
 }
 
-bool ATActor::RegexTest(FString Text)
+void ATActor::PreprocessorTest(FString Text)
 {
-
-	//针对数学算术式子的正则匹配
-	std::regex rp(R"((\d+\s*[\+\-\*/\^x]\s*)+\d+)");
-	std::string input = TCHAR_TO_UTF8(*Text);
-	std::smatch sm;
-	bool Rel = std::regex_search(input, sm, rp);
-	for (std::string t : sm)
-	{
-		UE_LOG(LOGNLP, Log, TEXT("匹配的算式：%s"), *FString(UTF8_TO_TCHAR(t.c_str())));
-	}
-
-	return Rel;
-}
-
-bool ATActor::IsNumber(FString NumStr)
-{
-	std::string Str = TCHAR_TO_UTF8(*NumStr);
-	return GlobalManager::IsNumber(Str);
-}
-
-FString ATActor::MathLogicAdapter(FString Question)
-{
-	std::string Input = TCHAR_TO_UTF8(*Question);
+	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
-	mla->Process(Input,Output);
-	return FString(UTF8_TO_TCHAR(Output.c_str()));
+	Output = MPrep->Prep_SensitiveWord->SensitiveWordFiltering(Input);
+	NLOG(LOGNLP,Log,TEXT("After Sensitive Word:%s"),*TOFS(Output));
+	std::string Tmp = Output;
+	Output = MPrep->Prep_SpecialSymbol->DeteleSpecialSymbol(Tmp);
+	NLOG(LOGNLP,Log,TEXT("After Special Symbol:%s"),*TOFS(Output));
+	Tmp = Output;
+	Output = MPrep->Prep_StopWord->StopWordFiltering(Tmp);
+	NLOG(LOGNLP,Log,TEXT("After Stop Word:%s"),*TOFS(Output));
+}
+
+FString ATActor::PrepAndLoapConformity(FString Text)
+{
+	std::string Input = TCHAR_TO_UTF8(*Text);
+	std::string Tmp,Output;
+	MPrep->Handle(Input,Tmp,FPreprocessorModule::SConfig(true,true,true,false));
+	MLoap->Handle(Tmp,Output);
+	return TOFS(Output);
 }
 
 // Called every frame

@@ -42,8 +42,13 @@ bool FWeatherLogicAdapter::Process(const std::string& Input, std::string& Output
 		{
 			Output = "我只能查询今天及未来三天的天气信息哦";
 		}
+		return true;
 	}
-	return true;
+	else
+	{
+		NLOG(LOGNLP,Log,TEXT("不是询问天气问题"));
+	}
+	return false;
 }
 
 bool FWeatherLogicAdapter::IsAskWeather(const std::string& Text,std::string& MatchText)

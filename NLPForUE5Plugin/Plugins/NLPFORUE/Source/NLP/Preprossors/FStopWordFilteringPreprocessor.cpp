@@ -16,32 +16,32 @@ FStopWordFilteringPreprocessor& FStopWordFilteringPreprocessor::CreateInstance()
 	return Instance;
 }
 
-vector<string> FStopWordFilteringPreprocessor::StopWordFiltering(string Text)
+std::string FStopWordFilteringPreprocessor::StopWordFiltering(string Text)
 {
-	vector<string> words;
-	vector<string> relwords;
-	GlobalManager::jieba.Cut(Text,words,true);
-	for (size_t i = 0; i < words.size(); ++i)
-	{
-		if (GlobalManager::jieba.extractor.GetStopWords().find(words[i]) == GlobalManager::jieba.extractor.GetStopWords().end())
-		{
-			relwords.push_back(words[i]);
-		}
-	}
-	return relwords;
-}
-
-vector<string> FStopWordFilteringPreprocessor::StopWordFiltering(vector<string> Words)
-{
-	vector<string> relwords;
+	vector<string> Words;
+	std::string RelText;
+	GlobalManager::jieba.Cut(Text,Words,true);
 	for (size_t i = 0; i < Words.size(); ++i)
 	{
 		if (GlobalManager::jieba.extractor.GetStopWords().find(Words[i]) == GlobalManager::jieba.extractor.GetStopWords().end())
 		{
-			relwords.push_back(Words[i]);
+			RelText += Words[i];
 		}
 	}
-	return relwords;
+	return RelText;
+}
+
+std::string FStopWordFilteringPreprocessor::StopWordFiltering(vector<string> Words)
+{
+	std::string RelText;
+	for (size_t i = 0; i < Words.size(); ++i)
+	{
+		if (GlobalManager::jieba.extractor.GetStopWords().find(Words[i]) == GlobalManager::jieba.extractor.GetStopWords().end())
+		{
+			RelText += Words[i];
+		}
+	}
+	return RelText;
 }
 
 

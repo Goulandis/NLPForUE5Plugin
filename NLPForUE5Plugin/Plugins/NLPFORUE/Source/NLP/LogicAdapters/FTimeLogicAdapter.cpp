@@ -32,6 +32,10 @@ bool FTimeLogicAdapter::Process(const std::string& Input, std::string& Output)
 		Output = SpawnAnswer(Tm,AskType);
 		return true;
 	}
+	else
+	{
+		NLOG(LOGNLP,Log,TEXT("不是询问时间问题"));
+	}
 	return false;
 }
 

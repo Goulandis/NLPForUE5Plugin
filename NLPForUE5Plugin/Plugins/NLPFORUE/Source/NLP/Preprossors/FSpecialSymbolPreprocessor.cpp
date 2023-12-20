@@ -23,28 +23,48 @@ FSpecialSymbolPreprocessor& FSpecialSymbolPreprocessor::CreateInstance()
 	return Instance;
 }
 
+// std::string FSpecialSymbolPreprocessor::DeteleSpecialSymbol(const std::string& Text)
+// {
+// 	int Len = Text.size()+1;
+// 	char* TChar = new char[Len];
+// 	strcpy_s(TChar,Len,Text.c_str());
+// 	char* Rel = new char[Len];
+// 	int j = 0;
+// 	for(int i=0;i<Len;++i)
+// 	{
+// 		if(IsSpecialSymbol(TChar[i]))
+// 		{
+// 			continue;
+// 		}
+// 		else
+// 		{
+// 			Rel[j] = TChar[i];
+// 			++j;
+// 		}
+// 	}
+// 	std::string RelStr;
+// 	RelStr += Rel;
+// 	delete TChar;
+// 	delete Rel;
+// 	return RelStr;
+// }
+
 std::string FSpecialSymbolPreprocessor::DeteleSpecialSymbol(const std::string& Text)
 {
-	int Len = Text.size()+1;
-	char* TChar = new char[Len];
-	strcpy_s(TChar,Len,Text.c_str());
-	char* Rel = new char[Len];
-	int j = 0;
-	for(int i=0;i<Len;++i)
+	vector<std::string> Words = GlobalManager::SplitTextToWord(Text);
+	std::string Rel;
+	for(std::string Word : Words)
 	{
-		if(IsSpecialSymbol(TChar[i]))
+		if(IsSpecialSymbol(Word))
 		{
 			continue;
 		}
 		else
 		{
-			Rel[j] = TChar[i];
-			++j;
+			Rel += Word;
 		}
 	}
-	std::string RelStr;
-	RelStr += Rel;
-	return RelStr;
+	return Rel;
 }
 
 bool FSpecialSymbolPreprocessor::IsSpecialSymbol(const char& Chr)
@@ -57,5 +77,18 @@ bool FSpecialSymbolPreprocessor::IsSpecialSymbol(const char& Chr)
 		}
 	}
 	
+	return false;
+}
+
+inline bool FSpecialSymbolPreprocessor::IsSpecialSymbol(const std::string Word)
+{
+	const char* Chr = Word.data();
+	for(BYTE sm : SpecialSymbols)
+	{
+		if(*Chr == sm)
+		{
+			return true;
+		}
+	}
 	return false;
 }

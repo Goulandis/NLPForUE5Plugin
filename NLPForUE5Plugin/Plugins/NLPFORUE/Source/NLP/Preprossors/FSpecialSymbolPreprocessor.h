@@ -8,11 +8,14 @@ public:
 	~FSpecialSymbolPreprocessor();
 	static FSpecialSymbolPreprocessor& CreateInstance();
 
+	std::string DeleteSpaceSymbol(const std::string& Text);
+	//std::string DeteleSpecialSymbol(const std::string& Text);
 	std::string DeteleSpecialSymbol(const std::string& Text);
 	bool IsSpecialSymbol(const char& Chr);
-	std::string DeleteSpaceSymbol(const std::string& Text);
+	bool IsSpecialSymbol(const std::string Word);
 private:
 	FSpecialSymbolPreprocessor();
+	
 
 	/*
 	 * 0x00:空字符	0x08:退格符	0x09:水平制表符
