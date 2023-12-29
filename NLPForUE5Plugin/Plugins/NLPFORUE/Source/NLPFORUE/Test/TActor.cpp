@@ -2,6 +2,7 @@
 #include "NLPFORUE/Common/FDefine.h"
 #include "NLP/Common/GlobalManager.h"
 #include <regex>
+#include "../SQLite3/sqlite3.h"
 
 DEFINE_LOG_CATEGORY(LOGNLP);
 
@@ -10,9 +11,15 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	std::string Tmp;
-	MPrep->Handle(Input,Tmp,FPreprocessorModule::SConfig(true,true,true,false));
-	MLoap->Handle(Tmp,Output);
+	// std::string Tmp;
+	// MPrep->Handle(Input,Tmp,FPreprocessorModule::SConfig(true,true,true,false));
+	// MLoap->Handle(Tmp,Output);
+
+	sqlite3* db;
+	const char* dbname = "SQLite3/test.db";
+	std::string tmp = TOUTF8(*(PROJECTPLUGINDIR + GlobalManager::RESOURCE_PATH + dbname));
+	const char* DBPath = tmp.c_str();
+	sqlite3_open(DBPath,&db);
 
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;

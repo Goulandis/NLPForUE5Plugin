@@ -33,5 +33,6 @@ public class NLP : ModuleRules
 			Path.Combine(ModulePath, "../rapidjson"),
 			Path.Combine(ModulePath, "../nlohmann"),
 		});
+		PublicAdditionalLibraries.Add(Path.Combine(ModulePath,"../SQLite3/sqlite3.lib"));
 	}
 }
