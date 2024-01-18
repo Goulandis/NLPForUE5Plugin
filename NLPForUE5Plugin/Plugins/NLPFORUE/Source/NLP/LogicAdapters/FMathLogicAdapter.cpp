@@ -1,7 +1,6 @@
 #include "FMathLogicAdapter.h"
 #include <algorithm>
 #include <fstream>
-#include "NLP/Managers/FPreprocessorFactory.h"
 
 FMathLogicAdapter::FMathLogicAdapter()
 {
@@ -9,7 +8,7 @@ FMathLogicAdapter::FMathLogicAdapter()
 	// 加载词典缓存
 	std::string MathConfideceLevelDictPath = ConfigManager::CreateInstance().MathLogicAdapterConfig.at("MathConfideceLevelDictPath");
 	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + MathConfideceLevelDictPath;
-	ifstream Ifs(Path);
+	std::ifstream Ifs(Path);
 	if(Ifs.is_open())
 	{
 		std::string Line;
@@ -27,7 +26,7 @@ FMathLogicAdapter::FMathLogicAdapter()
 			// 动词、名词、数词提取
 			for(std::string Tmp : LineDict)
 			{
-				vector<std::pair<std::string,std::string>> Tagers;
+				std::vector<std::pair<std::string,std::string>> Tagers;
 				GlobalManager::jieba.Tag(Tmp,Tagers);
 				for(std::pair<std::string,std::string> Pair : Tagers)
 				{
@@ -47,7 +46,7 @@ FMathLogicAdapter::FMathLogicAdapter()
 	Ifs.close();
 }
 
-FMathLogicAdapter& FMathLogicAdapter::CreateInstance()
+FMathLogicAdapter& FMathLogicAdapter::Get()
 {
 	static FMathLogicAdapter Instance;
 	return Instance;
@@ -327,7 +326,7 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType&
 	// 动词匹配，提取句子中的动词集合，如果动词集合与词典动词集合存在交集则置信度+1，否则+0
 	// 名词匹配，提取句子中的名词集合，如果名词集合与词典名词集合存在交集则置信度+1，否则+0
 	{
-		vector<std::pair<std::string,std::string>> Tagers;
+		std::vector<std::pair<std::string,std::string>> Tagers;
 		GlobalManager::jieba.Tag(LocalText,Tagers);
 		bool bMatchVerb = false;
 		bool bMatchNoun = false;
@@ -373,7 +372,7 @@ int FMathLogicAdapter::ConfideceLevel(const std::string& Text, const HandleType&
 		for(std::string Str : LineDict)
 		{
 			std::string Tmp = GetMaxSubString(LocalTextForExtract,Str);
-			if(Tmp.find("X") == string::npos)
+			if(Tmp.find("X") == std::string::npos)
 			{
 				continue;
 			}

@@ -3,10 +3,10 @@
 
 FPreprocessorModule::FPreprocessorModule()
 {
-	Prep_LanguageJudgment = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FLanguageJudgmentPreprocessor>();
-	Prep_SensitiveWord = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSensitiveWordPreprocessor>();
-	Prep_SpecialSymbol = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSpecialSymbolPreprocessor>();
-	Prep_StopWord = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FStopWordFilteringPreprocessor>();
+	Prep_LanguageJudgment = &GetPreprocessor<FLanguageJudgmentPreprocessor>();
+	Prep_SensitiveWord = &GetPreprocessor<FSensitiveWordPreprocessor>();
+	Prep_SpecialSymbol = &GetPreprocessor<FSpecialSymbolPreprocessor>();
+	Prep_StopWord = &GetPreprocessor<FStopWordFilteringPreprocessor>();
 	
 	std::string SensitiveWordPath = ConfigManager::CreateInstance().SensitiveWordPreprocessorConfig.at("SensitiveWordPath");
 	const std::string SensitiveWordDictPath = GlobalManager::RESOURCE_ABSOLUTE_PATH + SensitiveWordPath;

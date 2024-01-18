@@ -92,7 +92,7 @@ static int Utf8StringLen(const string& word)
 class NLP_API FSensitiveWordPreprocessor : public FPreprocessor
 {
 public:
-	static FSensitiveWordPreprocessor& CreateInstance();
+	static FSensitiveWordPreprocessor& Get();
 	~FSensitiveWordPreprocessor();
 
 	void LoadSensitiveWordDict(const string& Path);
@@ -101,6 +101,5 @@ public:
 private:
 	FSensitiveWordPreprocessor();
 
-private:
 	DFATree* DfaTree;
 };

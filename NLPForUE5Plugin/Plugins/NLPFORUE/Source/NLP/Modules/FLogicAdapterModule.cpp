@@ -5,10 +5,10 @@
 
 FLogicAdapterModule::FLogicAdapterModule()
 {
-	Loap_Math = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FMathLogicAdapter>();
-	Loap_Weather = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FWeatherLogicAdapter>();
-	Loap_Time = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FTimeLogicAdapter>();
-	Loap_Base = FLogicAdapterFactory::CreateInstance()->GetLogicAdapter<FBaseLogicAdapter>();
+	Loap_Math = &GetLogicAdapter<FMathLogicAdapter>();
+	Loap_Weather = &GetLogicAdapter<FWeatherLogicAdapter>();
+	Loap_Time = &GetLogicAdapter<FTimeLogicAdapter>();
+	Loap_Base = &GetLogicAdapter<FBaseLogicAdapter>();
 	NLOG(LOGNLP,Log,TEXT("FLogicAdapterModule constructed"));
 }
 

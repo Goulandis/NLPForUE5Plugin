@@ -1,7 +1,6 @@
 #include "ConfigManager.h"
 #include <fstream>
 #include "GlobalManager.h"
-#include "NLP/LogicAdapters/FWeatherLogicAdapter.h"
 
 ConfigManager& ConfigManager::CreateInstance()
 {
@@ -35,6 +34,8 @@ void ConfigManager::InitConfigObject()
 	WeahterLogicAdapterConfig = Config.at("WeatherLogicAdapter");
 	MathLogicAdapterConfig = Config.at("MathLogicAdapter");
 	SensitiveWordPreprocessorConfig = Config.at("SensitiveWordPreprocessor");
+	SpecialSymbolPreprocessor = Config.at("SpecialSymbolPreprocessor");
+	SqliteModuleConfig = Config.at("SqliteModule");
 }
 
 ConfigManager::~ConfigManager()

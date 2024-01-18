@@ -14,9 +14,7 @@ struct CityAdcode
 class NLP_API FWeatherLogicAdapter : public FLogicAdapter
 {
 public:
-	static FWeatherLogicAdapter& CreateInstance();
-	
-	~FWeatherLogicAdapter();
+	static FWeatherLogicAdapter& Get();
 
 	bool Process(const std::string& Input,std::string& Output);
 	// 判断一个句子是否是在询问天气信息
@@ -36,6 +34,9 @@ public:
 	
 private:
 	FWeatherLogicAdapter();
+	~FWeatherLogicAdapter();
+	FWeatherLogicAdapter(const FWeatherLogicAdapter& Single) = delete;
+	
 	void InitCityAdcode();
 	void InitAskWeatherTextTag();
 

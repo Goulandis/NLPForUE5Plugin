@@ -7,8 +7,7 @@ class NLP_API FTimeLogicAdapter : public FLogicAdapter
 {
 public:
 	enum EAskType { Date,Week,Time };
-	static FTimeLogicAdapter& CreateInstance();
-	
+	static FTimeLogicAdapter& Get();
 	~FTimeLogicAdapter();
 
 	bool Process(const std::string& Input,std::string& Output);
@@ -17,4 +16,7 @@ public:
 	std::string SpawnAnswer(const std::tm& Time,const EAskType AskType);
 private:
 	FTimeLogicAdapter();
+	
+	//FTimeLogicAdapter(const FTimeLogicAdapter& Single) = delete;
+	//const FTimeLogicAdapter &operator=(const FTimeLogicAdapter& Single) = delete;
 };

@@ -8,11 +8,6 @@ public class NLP : ModuleRules
 		get { return ModuleDirectory; }
 	}
 
-	// private string CppJiebaPath
-	// {
-	// 	get { return Path.GetFullPath(Path.Combine(ModulePath, "../cppjieba")); }
-	// }
-
 	public NLP(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
@@ -32,7 +27,15 @@ public class NLP : ModuleRules
 			Path.Combine(ModulePath, "../cpp-httplib"),
 			Path.Combine(ModulePath, "../rapidjson"),
 			Path.Combine(ModulePath, "../nlohmann"),
+			Path.Combine(ModulePath, "../StringFormat"),
+			"E:/Anaconda/envs/NLPFORUE/include"
 		});
-		PublicAdditionalLibraries.Add(Path.Combine(ModulePath,"../SQLite3/sqlite3.lib"));
+		PublicAdditionalLibraries.AddRange(new string[]
+		{
+			Path.Combine(ModulePath,"../SQLite3/sqlite3.lib"),
+			"E:/Anaconda/envs/NLPFORUE/libs/_tkinter.lib",
+			"E:/Anaconda/envs/NLPFORUE/libs/python3.lib",
+			"E:/Anaconda/envs/NLPFORUE/libs/python39.lib"
+		});
 	}
 }

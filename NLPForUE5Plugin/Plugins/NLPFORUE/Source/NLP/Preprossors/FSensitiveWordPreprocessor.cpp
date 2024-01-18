@@ -139,7 +139,7 @@ FSensitiveWordPreprocessor::FSensitiveWordPreprocessor()
 	NLOG(LOGNLP,Log,TEXT("FSensitiveWordPreprocessor constructed"));
 }
 
-FSensitiveWordPreprocessor& FSensitiveWordPreprocessor::CreateInstance()
+FSensitiveWordPreprocessor& FSensitiveWordPreprocessor::Get()
 {
 	static FSensitiveWordPreprocessor Instance;
 	return Instance;

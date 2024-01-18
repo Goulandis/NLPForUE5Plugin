@@ -11,8 +11,12 @@ public:
 	nlohmann::json Config;
 
 	nlohmann::json SensitiveWordPreprocessorConfig;
+	nlohmann::json SpecialSymbolPreprocessor;
 	nlohmann::json WeahterLogicAdapterConfig;
 	nlohmann::json MathLogicAdapterConfig;
+	nlohmann::json SqliteModuleConfig;
+
+	char* CorpusSplitChr = "	";
 private:
 	ConfigManager();
 	void InitConfigObject();

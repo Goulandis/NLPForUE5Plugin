@@ -1,11 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
+#include "../NLP/Net/FSoc.h"
 #include "NLP/Modules/FPreprocessorModule.h"
-#include "NLP/Managers/FLogicAdapterFactory.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "NLP/Modules/FLogicAdapterModule.h"
+#include "NLP/Modules/FSqliteModule.h"
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h> 
 #include "TActor.generated.h"
 
 UCLASS()
@@ -22,15 +25,14 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	GlobalManager::ELanguageType GetLanguageType();
+	// --------------jieba API-------------------
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString CWS(FString Text);
-	UFUNCTION(BlueprintCallable,Category="TActor")
-	FString SensitiveWordFiltering(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString TestJiebaTag(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString TestJiebaExtract(FString Text);
+	
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	void PreprocessorTest(FString Text);
 	UFUNCTION(BlueprintCallable,Category="TActor")
@@ -38,6 +40,22 @@ protected:
 
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	FString ComTest(FString Text);
+
+	// --------------Soc API---------------------
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	bool SocConnect(FString InIP = "127.0.0.1",int InPort = 7214);
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	bool SocSend(FString Msg);
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	bool SocCmd(FString InCmd,FString InType,FString InData);
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	void SocClose();
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	void Word2VecServerClose();
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	void Word2VecServerSetup();
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	void Word2VecServerWindowFind();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -45,4 +63,8 @@ public:
 private:
 	TSharedPtr<FPreprocessorModule> MPrep;
 	TSharedPtr<FLogicAdapterModule> MLoap;
+	TSharedPtr<FSqliteModule> MSql;
+
+	FSoc Soc;
+	HWND Word2VecServerWindwosHandle;
 };

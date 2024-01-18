@@ -8,7 +8,7 @@ FTimeLogicAdapter::FTimeLogicAdapter()
 	NLOG(LOGNLP,Log,TEXT("FTimeLogicAdapter constructed"));
 }
 
-FTimeLogicAdapter& FTimeLogicAdapter::CreateInstance()
+FTimeLogicAdapter& FTimeLogicAdapter::Get()
 {
 	static FTimeLogicAdapter Instance;
 	return Instance;

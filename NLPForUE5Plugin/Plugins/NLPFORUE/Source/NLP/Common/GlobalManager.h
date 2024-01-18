@@ -52,7 +52,7 @@ namespace GlobalManager
 	const char* const RESOURCE_PATH = "NLPFORUE/Resources/";
 	const char* const SOURCE_PATH = "NLPFORUE/Source/";
 	// 全局配置文件相对路径
-	const char* const CONFIG_PATH = "Config/Config";
+	const char* const CONFIG_PATH = "Config/Config.json";
 	// 结巴分词字典文件相对路径
 	const char* const DICT_PATH = "cppjieba/dict/jieba.dict.utf8";
 	// 结巴分词hmm模型配置文件相对路径

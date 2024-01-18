@@ -5,10 +5,8 @@
 class NLP_API FLanguageJudgmentPreprocessor : public FPreprocessor
 {
 public:
-	static FLanguageJudgmentPreprocessor& CreateInstance();
-
+	static FLanguageJudgmentPreprocessor& Get();
 	~FLanguageJudgmentPreprocessor();
-
 	// 判断输入文本是英文还是中文，目前只支持中英文识别
 	GlobalManager::ELanguageType GetLanguageType(std::string& Text);
 private:

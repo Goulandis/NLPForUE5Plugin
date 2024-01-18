@@ -8,7 +8,7 @@ from chiadapter.storage_adapter import ChiStorageAdapter
 
 
 # 是否需要训练
-btrian = False
+btrian = True
 # 训练语料数据目录
 directory_to_search = '../../../../DataSets/chinese_chatbot_corpus/clean_chat_corpus/customresponses'
 # 支持的训练语料文件类型

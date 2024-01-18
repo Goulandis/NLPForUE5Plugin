@@ -5,8 +5,8 @@
 class NLP_API FSpecialSymbolPreprocessor : public FPreprocessor
 {
 public:
+	static FSpecialSymbolPreprocessor& Get();
 	~FSpecialSymbolPreprocessor();
-	static FSpecialSymbolPreprocessor& CreateInstance();
 
 	std::string DeleteSpaceSymbol(const std::string& Text);
 	//std::string DeteleSpecialSymbol(const std::string& Text);
@@ -15,7 +15,6 @@ public:
 	bool IsSpecialSymbol(const std::string Word);
 private:
 	FSpecialSymbolPreprocessor();
-	
 
 	/*
 	 * 0x00:空字符	0x08:退格符	0x09:水平制表符
@@ -23,4 +22,5 @@ private:
 	 * 0x20:空格
 	 */
 	BYTE SpecialSymbols[7] = {0x00,0x08,0x09,0x0A,0x0B,0x0D,0x20};
+	std::vector<std::string> SpecialSymbolVec;
 };

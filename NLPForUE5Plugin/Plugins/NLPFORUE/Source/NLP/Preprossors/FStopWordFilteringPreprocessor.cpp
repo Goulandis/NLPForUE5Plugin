@@ -10,7 +10,7 @@ FStopWordFilteringPreprocessor::~FStopWordFilteringPreprocessor()
 	NLOG(LOGNLP,Log,TEXT("StopWordFilteringPreprocessor destructed"));
 }
 
-FStopWordFilteringPreprocessor& FStopWordFilteringPreprocessor::CreateInstance()
+FStopWordFilteringPreprocessor& FStopWordFilteringPreprocessor::Get()
 {
 	static FStopWordFilteringPreprocessor Instance;
 	return Instance;

@@ -10,7 +10,7 @@ FLanguageJudgmentPreprocessor::~FLanguageJudgmentPreprocessor()
 	NLOG(LOGNLP,Log,TEXT("LanguageJudgmentPreprocessor destructed"));
 }
 
-FLanguageJudgmentPreprocessor& FLanguageJudgmentPreprocessor::CreateInstance()
+FLanguageJudgmentPreprocessor& FLanguageJudgmentPreprocessor::Get()
 {
 	static FLanguageJudgmentPreprocessor Instance;
 	return Instance;

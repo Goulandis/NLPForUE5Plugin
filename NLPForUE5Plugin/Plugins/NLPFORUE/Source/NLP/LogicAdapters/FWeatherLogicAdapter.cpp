@@ -10,7 +10,7 @@ FWeatherLogicAdapter::FWeatherLogicAdapter()
 	NLOG(LOGNLP,Log,TEXT("FWeatherLogicAdapter constructed"));
 }
 
-FWeatherLogicAdapter& FWeatherLogicAdapter::CreateInstance()
+FWeatherLogicAdapter& FWeatherLogicAdapter::Get()
 {
 	static FWeatherLogicAdapter Instance;
 	return Instance;

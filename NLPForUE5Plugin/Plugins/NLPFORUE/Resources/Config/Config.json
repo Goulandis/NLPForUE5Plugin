@@ -1,0 +1,28 @@
+{	
+	"SensitiveWordPreprocessor":{
+		"SensitiveWordPath":"textfilter/keywords"
+	},
+	"SpecialSymbolPreprocessor":{
+		"SpecialSymbolPath":"Dicts/SpecialSymbol"
+	},
+	"WeatherLogicAdapter": {
+		"WeatherInfoHttpRequest": {
+			"Gd": {
+				"Url": "restapi.amap.com",
+				"Key": "62aac7f2fbe5a09d9c69f611d238034b",
+				"Extensions": "all",
+				"WebSubfix": "/v3/weather/weatherInfo"
+			}
+		},
+		"CityAdcodeDictPath": "Dicts/CityAdcode",
+		"AskWeatherTextTagDictPath": "Dicts/AskWeatherTextTag"
+	},
+	"MathLogicAdapter": {
+		"MathConfideceLevelDictPath": "Dicts/MathConfideceLevel"
+	},
+	"SqliteModule":{
+		"DefaultCorpusPath":"SQLite3/Corpus",
+		"DefaultDatabasePath":"SQLite3/Corpus.db",
+		"DefaultTrainFlag":"Train"
+	}
+}

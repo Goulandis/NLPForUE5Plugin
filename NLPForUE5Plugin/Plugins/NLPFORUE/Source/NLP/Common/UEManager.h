@@ -16,6 +16,6 @@ DECLARE_LOG_CATEGORY_EXTERN(LOGNLP, All, All)
 namespace GlobalManager
 {
 	// 虚幻引擎系统体系下的资源路径
-	const std::string RESOURCE_ABSOLUTE_PATH = TCHAR_TO_UTF8(*(FPaths::ProjectPluginsDir() + "NLPFORUE/Resources/"));
+	const std::string RESOURCE_ABSOLUTE_PATH = TCHAR_TO_UTF8(*(PROJECTPLUGINDIR + "NLPFORUE/Resources/"));
 }
 

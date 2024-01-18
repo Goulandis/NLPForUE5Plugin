@@ -6,9 +6,11 @@
 class NLP_API FBaseLogicAdapter : public FLogicAdapter
 {
 public:
-	static FBaseLogicAdapter& CreateInstance();
-	
+	static FBaseLogicAdapter& Get();
 	~FBaseLogicAdapter();
+	
 private:
 	FBaseLogicAdapter();
+	//FBaseLogicAdapter(const FBaseLogicAdapter& Single) = delete;
+	//const FBaseLogicAdapter &operator=(const FBaseLogicAdapter& Single) = delete;
 };

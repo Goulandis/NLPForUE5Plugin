@@ -5,12 +5,12 @@
 class NLP_API FStopWordFilteringPreprocessor : public FPreprocessor
 {
 public:
-	static FStopWordFilteringPreprocessor& CreateInstance();
-	
+	static FStopWordFilteringPreprocessor& Get();
 	~FStopWordFilteringPreprocessor();
 	
 	std::string StopWordFiltering(string Text);
 	std::string StopWordFiltering(vector<string> Words);
 private:
 	FStopWordFilteringPreprocessor();
+	
 };

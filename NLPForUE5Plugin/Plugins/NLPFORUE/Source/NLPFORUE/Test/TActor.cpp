@@ -2,7 +2,8 @@
 #include "NLPFORUE/Common/FDefine.h"
 #include "NLP/Common/GlobalManager.h"
 #include <regex>
-#include "../SQLite3/sqlite3.h"
+#include "Python.h"
+#include <codecvt>
 
 DEFINE_LOG_CATEGORY(LOGNLP);
 
@@ -11,18 +12,73 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	// std::string Tmp;
-	// MPrep->Handle(Input,Tmp,FPreprocessorModule::SConfig(true,true,true,false));
-	// MLoap->Handle(Tmp,Output);
-
-	sqlite3* db;
-	const char* dbname = "SQLite3/test.db";
-	std::string tmp = TOUTF8(*(PROJECTPLUGINDIR + GlobalManager::RESOURCE_PATH + dbname));
-	const char* DBPath = tmp.c_str();
-	sqlite3_open(DBPath,&db);
+	//MSql->Train();
+	//MSql->Handle(Input,Output);
+	
+	//std::wstring cmd = L"E:/Anaconda/envs/NLPFORUE/Python.exe E:/Goulandis/NLPForUE5Plugin/NLPForUE5Plugin/Plugins/NLPFORUE/Scripts/Gensim/Word2Vec.py 这是测试字符串1 这是测试字符串2";
+	//const char* GBK_LOCAL_NAME = "CHS";
+	//std::wstring_convert<std::codecvt<wchar_t,char,mbstate_t>> conv(new std::codecvt<wchar_t,char,mbstate_t>(GBK_LOCAL_NAME));
+	//std::wstring wcmd = conv.from_bytes(cmd);
+	// std::wstring_convert<std::codecvt_utf8<wchar_t>> Converter;
+	// std::string utf8cmd = Converter.to_bytes(cmd);
+	//
+	// system("E:/Anaconda/envs/NLPFORUE/Python.exe E:/Goulandis/NLPForUE5Plugin/NLPForUE5Plugin/Plugins/NLPFORUE/Scripts/Gensim/Word2Vec.py");
 
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;
+}
+
+bool ATActor::SocConnect(FString InIP, int InPort)
+{
+	Soc = FSoc();
+	return Soc.SocConnet();
+}
+
+bool ATActor::SocSend(FString Msg)
+{
+	std::string MsgStr = TCHAR_TO_UTF8(*Msg);
+	return Soc.SocSend(MsgStr);
+}
+
+bool ATActor::SocCmd(FString InCmd, FString InType, FString InData)
+{
+	std::string Cmd = TCHAR_TO_UTF8(*InCmd);
+	std::string Type = TCHAR_TO_UTF8(*InType);
+	std::string Data = TCHAR_TO_UTF8(*InData);
+	return Soc.SocCmd(Cmd,Type,Data);
+}
+
+void ATActor::SocClose()
+{
+	Soc.SocClose();
+}
+
+void ATActor::Word2VecServerClose()
+{
+	::SendMessage(Word2VecServerWindwosHandle,WM_CLOSE,0,0);
+}
+
+void ATActor::Word2VecServerSetup()
+{
+	std::thread Word2VecServerSetupThread([]()
+	{
+		std::string Cmd = TCHAR_TO_UTF8(*(PROJECTPLUGINDIR + "NLPFORUE/Scripts/Gensim/Setup.bat"));
+		system(Cmd.c_str());
+	});
+	Word2VecServerSetupThread.detach();
+}
+
+void ATActor::Word2VecServerWindowFind()
+{
+	Word2VecServerWindwosHandle = ::FindWindow(NULL,_T("Word2VecServer"));
+	if(Word2VecServerWindwosHandle == NULL)
+	{
+		NLOG(LOGNLP,Log,TEXT("No window Word2VecServer found"));
+	}
+	else
+	{
+		NLOG(LOGNLP,Error,TEXT("Window Word2VecServer has been found : %d"),Word2VecServerWindwosHandle);
+	}
 }
 
 // Sets default values
@@ -32,17 +88,16 @@ ATActor::ATActor()
 	PrimaryActorTick.bCanEverTick = true;
 	MPrep = MakeShareable(new FPreprocessorModule());
 	MLoap = MakeShareable(new FLogicAdapterModule());
+	MSql = MakeShareable(new FSqliteModule());
 }
 
 ATActor::~ATActor()
 {
-	
 }
 
 void ATActor::BeginDestroy()
 {
-	//FPreprocessorFactory::CreateInstance()->DestroyInstance();
-	//FLogicAdapterFactory::CreateInstance()->DestroyInstance();
+	
 	Super::BeginDestroy();
 }
 
@@ -50,15 +105,6 @@ void ATActor::BeginDestroy()
 void ATActor::BeginPlay()
 {
 	Super::BeginPlay();
-}
-
-GlobalManager::ELanguageType ATActor::GetLanguageType()
-{
-	FLanguageJudgmentPreprocessor* lp = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FLanguageJudgmentPreprocessor>();
-	string temp = TCHAR_TO_UTF8(TEXT("The half-width character is the ASCii code of 0~127"));
-	GlobalManager::ELanguageType ltype =  lp->GetLanguageType(temp);
-	UE_LOG(LOGNLPFORUE,Log,TEXT("语言为(1-zh_CN,2-en_US)：%d"),ltype);
-	return ltype;
 }
 
 FString ATActor::CWS(FString Text)
@@ -124,17 +170,6 @@ FString ATActor::CWS(FString Text)
 	UE_LOG(LOGNLP,Log,TEXT("CutForSearchF:%s"),*Rel);
 	return "";
 }
-
-
-FString ATActor::SensitiveWordFiltering(FString Text)
-{
-	FString DictPath = FPaths::ProjectPluginsDir()+TEXT("NLPFORUE/Resources/textfilter/keywords");
-	FSensitiveWordPreprocessor* sw = FPreprocessorFactory::CreateInstance()->GetPreprocessor<FSensitiveWordPreprocessor>();
-	sw->LoadSensitiveWordDict(TCHAR_TO_UTF8(*DictPath));
-	string Rel = sw->SensitiveWordFiltering(TCHAR_TO_UTF8(*Text));
-	return FString(UTF8_TO_TCHAR(Rel.c_str()));
-}
-
 
 FString ATActor::TestJiebaTag(FString Text)
 {

@@ -26,8 +26,7 @@ enum class HandleType
 class NLP_API FMathLogicAdapter : public FLogicAdapter
 {
 public:
-	static FMathLogicAdapter& CreateInstance(); 
-	
+	static FMathLogicAdapter& Get();
 	~FMathLogicAdapter();
 	
 	bool Process(const std::string& Input,std::string& Output);
@@ -87,7 +86,9 @@ public:
 	std::string KeyExtractClean(std::string Text,HandleType Type);
 private:
 	FMathLogicAdapter();
-
+	//FMathLogicAdapter(const FMathLogicAdapter& Single) = delete;
+	//const FMathLogicAdapter &operator=(const FMathLogicAdapter& Single) = delete;
+	
 	template<typename T>
 	T SingleOperationFormula(const T& Prefix,const T& Subfix,const GlobalManager::OpeTag Operation)
 	{

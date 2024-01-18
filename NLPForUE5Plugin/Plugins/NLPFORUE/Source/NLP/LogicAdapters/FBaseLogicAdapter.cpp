@@ -5,7 +5,7 @@ FBaseLogicAdapter::FBaseLogicAdapter()
 	NLOG(LOGNLP,Log,TEXT("FBaseLogicAdapter constructed"));
 }
 
-FBaseLogicAdapter& FBaseLogicAdapter::CreateInstance()
+FBaseLogicAdapter& FBaseLogicAdapter::Get()
 {
 	static FBaseLogicAdapter Instance;
 	return Instance;

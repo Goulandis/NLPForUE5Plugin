@@ -1,5 +1,8 @@
 #pragma once
-#include "NLP/Managers/FLogicAdapterFactory.h"
+#include "NLP/LogicAdapters/FBaseLogicAdapter.h"
+#include "NLP/LogicAdapters/FMathLogicAdapter.h"
+#include "NLP/LogicAdapters/FTimeLogicAdapter.h"
+#include "NLP/LogicAdapters/FWeatherLogicAdapter.h"
 #include "CoreMinimal.h"
 
 class NLP_API FLogicAdapterModule
@@ -25,5 +28,11 @@ public:
 	FTimeLogicAdapter* Loap_Time;
 	FBaseLogicAdapter* Loap_Base;
 private:
+	template<typename T>
+	static T& GetLogicAdapter()
+	{
+		return T::Get();
+	}
+	
 	SConfig Config;
 };

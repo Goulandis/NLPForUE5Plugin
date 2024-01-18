@@ -13,11 +13,28 @@ std::string FSpecialSymbolPreprocessor::DeleteSpaceSymbol(const std::string& Tex
 	return Rel;
 }
 
-FSpecialSymbolPreprocessor::FSpecialSymbolPreprocessor(){}
+FSpecialSymbolPreprocessor::FSpecialSymbolPreprocessor()
+{
+	std::string SpecialSymbolDictPath = ConfigManager::CreateInstance().SpecialSymbolPreprocessor.at("SpecialSymbolPath");
+	std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + SpecialSymbolDictPath;
+	std::ifstream Ifs(Path);
+	if(!Ifs.is_open())
+	{
+		NLOG(LOGNLP,Error,TEXT("Failed to open the file : %s"),*TOFS(Path));
+		Ifs.close();
+		return;
+	}
+	std::string Line;
+	while (std::getline(Ifs,Line))
+	{
+		SpecialSymbolVec.push_back(Line);
+	}
+	Ifs.close();
+}
 
 FSpecialSymbolPreprocessor::~FSpecialSymbolPreprocessor(){}
 
-FSpecialSymbolPreprocessor& FSpecialSymbolPreprocessor::CreateInstance()
+FSpecialSymbolPreprocessor& FSpecialSymbolPreprocessor::Get()
 {
 	static FSpecialSymbolPreprocessor Instance;
 	return Instance;
@@ -82,10 +99,17 @@ bool FSpecialSymbolPreprocessor::IsSpecialSymbol(const char& Chr)
 
 inline bool FSpecialSymbolPreprocessor::IsSpecialSymbol(const std::string Word)
 {
-	const char* Chr = Word.data();
-	for(BYTE sm : SpecialSymbols)
+	// const char* Chr = Word.data();
+	// for(BYTE sm : SpecialSymbols)
+	// {
+	// 	if(*Chr == sm)
+	// 	{
+	// 		return true;
+	// 	}
+	// }
+	for(std::string sm : SpecialSymbolVec)
 	{
-		if(*Chr == sm)
+		if(Word == sm)
 		{
 			return true;
 		}
