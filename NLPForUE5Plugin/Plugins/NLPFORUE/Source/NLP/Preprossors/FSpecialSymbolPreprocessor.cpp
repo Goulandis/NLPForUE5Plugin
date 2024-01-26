@@ -15,7 +15,7 @@ std::string FSpecialSymbolPreprocessor::DeleteSpaceSymbol(const std::string& Tex
 
 FSpecialSymbolPreprocessor::FSpecialSymbolPreprocessor()
 {
-	std::string SpecialSymbolDictPath = ConfigManager::CreateInstance().SpecialSymbolPreprocessor.at("SpecialSymbolPath");
+	std::string SpecialSymbolDictPath = ConfigManager::Get().SpecialSymbolPreprocessor.at("SpecialSymbolPath");
 	std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + SpecialSymbolDictPath;
 	std::ifstream Ifs(Path);
 	if(!Ifs.is_open())

@@ -20,9 +20,10 @@
 	"MathLogicAdapter": {
 		"MathConfideceLevelDictPath": "Dicts/MathConfideceLevel"
 	},
-	"SqliteModule":{
-		"DefaultCorpusPath":"SQLite3/Corpus",
-		"DefaultDatabasePath":"SQLite3/Corpus.db",
-		"DefaultTrainFlag":"Train"
+	"TrainModule":{
+		"DefaultSqliteCorpusPath":"Train/Corpus",
+		"DefaultDatabasePath":"Train/Corpus.db",
+		"DefaultTrainFlag":"Train",
+		"DefaultWord2VecCorpusPath":"Train/Word2VecCorpus"
 	}
 }

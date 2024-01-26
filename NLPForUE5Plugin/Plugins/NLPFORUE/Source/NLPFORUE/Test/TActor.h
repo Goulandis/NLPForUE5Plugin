@@ -6,7 +6,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "NLP/Modules/FLogicAdapterModule.h"
-#include "NLP/Modules/FSqliteModule.h"
+#include "NLP/Modules/FTrainModule.h"
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h> 
 #include "TActor.generated.h"
@@ -45,6 +45,8 @@ protected:
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	bool SocConnect(FString InIP = "127.0.0.1",int InPort = 7214);
 	UFUNCTION(BlueprintCallable,Category="TActor")
+	bool SocReconnect();
+	UFUNCTION(BlueprintCallable,Category="TActor")
 	bool SocSend(FString Msg);
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	bool SocCmd(FString InCmd,FString InType,FString InData);
@@ -56,6 +58,8 @@ protected:
 	void Word2VecServerSetup();
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	void Word2VecServerWindowFind();
+	UFUNCTION(BlueprintCallable,Category="TActor")
+	void Train();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -63,8 +67,6 @@ public:
 private:
 	TSharedPtr<FPreprocessorModule> MPrep;
 	TSharedPtr<FLogicAdapterModule> MLoap;
-	TSharedPtr<FSqliteModule> MSql;
-
-	FSoc Soc;
+	TSharedPtr<FTrainModule> MTrain;
 	HWND Word2VecServerWindwosHandle;
 };

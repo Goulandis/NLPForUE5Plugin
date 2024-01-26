@@ -10,7 +10,7 @@
 
 #include "cpp-httplib/httplib.h"
 #include "cppjieba/Jieba.hpp"
-
+#include "../SQLite3/sqlite3.h"
 #include "UEManager.h"
 #include "ConfigManager.h"
 #include "Math/UnitConversion.h"
@@ -72,6 +72,9 @@ namespace GlobalManager
 		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + IDF_PATH)),
 		TOUTF8(*(PROJECTPLUGINDIR + SOURCE_PATH + STOP_WORD_PATH))
 	);
+	// 全局Sqlite3数据库对象
+	inline sqlite3*  Database = nullptr;
+	inline std::string DatabaseTableName = "statement";
 	// 判断字符串是否匹配数学算式
 	inline bool RegexMathFormulas(const std::string& Text)
 	{
@@ -442,6 +445,106 @@ namespace GlobalManager
 		Rel += HndMln;
 		return Rel;
 	}
+
+	inline void OpenDatebase(std::string Path = "Default",sqlite3* DB = nullptr)
+	{
+		if(Path == "Default")
+		{
+			Path = RESOURCE_ABSOLUTE_PATH + std::string(ConfigManager::Get().TrainModuleConfig.at("DefaultDatabasePath"));
+		}
+		if(DB == nullptr)
+		{
+			int Err = sqlite3_open(Path.c_str(),&GlobalManager::Database);
+			if(Err)
+			{
+				NLOG(LOGNLP,Error,TEXT("[GlobalManager::OpenDatebase]%s"),*TOFS(std::string(sqlite3_errmsg(GlobalManager::Database))));
+			}
+		}
+		else
+		{
+			int Err = sqlite3_open(Path.c_str(),&DB);
+			if(Err)
+			{
+				NLOG(LOGNLP,Error,TEXT("[GlobalManager::OpenDatebase]%s"),*TOFS(std::string(sqlite3_errmsg(DB))));
+			}
+		}
+	}
+	
+	inline void CloseDatebase(sqlite3* DB = nullptr)
+	{
+		if(DB == nullptr)
+		{
+			if(GlobalManager::Database == nullptr) return;
+			int Err = sqlite3_close(GlobalManager::Database);
+			if(Err)
+			{
+				NLOG(LOGNLP,Error,TEXT("[GlobalManager::CloseDatebase]%s"),*TOFS(std::string(sqlite3_errmsg(GlobalManager::Database))));
+			}
+		}
+		else
+		{
+			int Err = sqlite3_close(DB);
+			if(Err)
+			{
+				NLOG(LOGNLP,Error,TEXT("[GlobalManager::CloseDatebase]%s"),*TOFS(std::string(sqlite3_errmsg(DB))));
+			}
+		}
+	}
+	
+	inline void CreateTable(const std::string& Name = "statement")
+	{
+		GlobalManager::DatabaseTableName = Name;
+		GlobalManager::OpenDatebase();
+		char* ErrMsg;
+		int Err;
+		std::string SqlDelte = "DROP TABLE IF EXISTS " + DatabaseTableName;
+		Err = sqlite3_exec(GlobalManager::Database,SqlDelte.c_str(),nullptr,0,&ErrMsg);
+		if(Err != SQLITE_OK)
+		{
+			NLOG(LOGNLP,Warning,TEXT("[GlobalManager::CreateTable]%s"),*TOFS(std::string(ErrMsg)));
+		}
+		std::string Sql = "CREATE TABLE IF NOT EXISTS "+ DatabaseTableName + " ("
+				"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
+				"text NTEXT	NOT NULL,"
+				"search_text NTEXT	NOT NULL,"
+				"conversation CHAR(20),"
+				"created_at	 DATETIME,"
+				"in_response_to	NTEXT NOT NULL);";
+		Err = sqlite3_exec(GlobalManager::Database,Sql.c_str(),nullptr,0,&ErrMsg);
+		if(Err != SQLITE_OK)
+		{
+			NLOG(LOGNLP,Warning,TEXT("[GlobalManager::CreateTable]%s"),*TOFS(std::string(ErrMsg)));
+		}
+	}
+
+	inline void SelectAll(int (*Callback)(void*,int,char**,char**), void * Obj,const std::string& TableName = "")
+	{
+		char* Sql;
+		if(TableName == "")
+		{
+			Sql = sqlite3_mprintf("SELECT * FROM %q",GlobalManager::DatabaseTableName.c_str());
+		}
+		else
+		{
+			Sql = sqlite3_mprintf("SELECT * FROM %q",TableName.c_str());
+		}
+		char* ErrMsg;
+		int Err = sqlite3_exec(Database,Sql,Callback,Obj,&ErrMsg);
+		if(Err)
+		{
+			NLOG(LOGNLP,Error,TEXT("[GlobalManager::SelectAllSearchTextCol]%s"),*TOFS(std::string(sqlite3_errmsg(Database))));
+		}
+	}
+
+	inline sqlite3* GetDatabase()
+	{
+		if(GlobalManager::Database == nullptr)
+		{
+			OpenDatebase();
+		}
+		return GlobalManager::Database;
+	}
+
 }
 
 #endif

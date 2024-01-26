@@ -5,7 +5,7 @@
 class NLP_API ConfigManager
 {
 public:
-	static ConfigManager& CreateInstance();
+	static ConfigManager& Get();
 	~ConfigManager();
 
 	nlohmann::json Config;
@@ -14,7 +14,7 @@ public:
 	nlohmann::json SpecialSymbolPreprocessor;
 	nlohmann::json WeahterLogicAdapterConfig;
 	nlohmann::json MathLogicAdapterConfig;
-	nlohmann::json SqliteModuleConfig;
+	nlohmann::json TrainModuleConfig;
 
 	char* CorpusSplitChr = "	";
 private:

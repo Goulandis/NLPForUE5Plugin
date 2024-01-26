@@ -1,21 +1,15 @@
 #coding:utf-8
 
 from gensim.models import Word2Vec
-from gensim.models import KeyedVectors
 import jieba
-import numpy as np
-import sys
+import Config
 import os
 import json
 
-# CorpusDir = sys.argv[1]
-# TextSource = sys.argv[0]
-# TextTarget = sys.argv[1]
-# print(TextSource+"\n"+TextTarget)
-CorpusDir = "E:/Goulandis/NLPForUE5Plugin/NLPForUE5Plugin/Plugins/NLPFORUE/Resources/SQLite3/Corpus"
-ModelSaveDir = "E:/Goulandis/NLPForUE5Plugin/NLPForUE5Plugin/Plugins/NLPFORUE/Scripts/Gensim"
-ModelSaveName = "Word2Vec"
-Train = False
+CorpusDir = Config.Config['Word2Vec']['CorpusDir']
+ModelSaveDir = Config.Config['Word2Vec']['ModelSaveDir']
+ModelSaveName = Config.Config['Word2Vec']['ModelSaveName']
+Train = Config.Config['Word2Vec']['Train']
 
 # 遍历语料文件夹，读取文件夹及其子文件夹下所有的文件
 def GetCorpusFiles(Path,FileList=[]):
@@ -26,21 +20,22 @@ def GetCorpusFiles(Path,FileList=[]):
             GetCorpusFiles(os.path.join(Path,SubPath),FileList)
     return FileList
 
-def ReadCorpus(Path):
+def ReadCorpus(FileList):
     TextList = []
-    with open(Path,'r',encoding='utf8') as File:
-        for Line in File.readlines():
-            TextList.append(Line)
+    for Path in FileList:
+        with open(Path,'r',encoding='utf8') as File:
+            print("Reading file : " + Path)
+            for Line in File.readlines():
+                TextList.append(Line)
+            File.close()
+            print("Readed file : " + Path)
     return TextList
 
 def TrainWord2VecModel(TextList):
-    ModelExists = False
-    for SubPath in os.listdir(ModelSaveDir):
-        if os.path.isfile(SubPath):
-            SubPathName = os.path.basename(SubPath)
-            if SubPath == ModelSaveName:
-                ModelExists = True
-    if (ModelExists and Train) or not ModelExists:
+    ModelFile = ModelSaveDir+ModelSaveName
+    if os.path.exists(ModelFile):
+        os.remove(ModelFile)
+    if Train:
         '''
         sg=1 是 skip-gram 算法，对低频词敏感；默认 sg=0 为 CBOW 算法。
         size 是输出词向量的维数，值太小会导致词映射因为冲突而影响结果，值太大则会耗内存并使算法计算变慢，一般值取为100到200之间。
@@ -49,22 +44,40 @@ def TrainWord2VecModel(TextList):
         negative 和 sample 可根据训练结果进行微调，sample 表示更高频率的词被随机下采样到所设置的阈值，默认值为 1e-3。
         hs=1 表示层级 softmax 将会被使用，默认 hs=0 且 negative 不为0，则负采样将会被选择使用。
         '''
+        print("Start training Word2Vec model")
         Model = Word2Vec(sentences=TextList,sg=1,min_count=2,negative=1,sample=0.001,workers=4)
+        print("Completed Word2Vec model")
         Model.save(os.path.join(ModelSaveDir,ModelSaveName))
+        print("Saved Word2Vec model to " + os.path.join(ModelSaveDir,ModelSaveName))
 
 def Similarity(JsonData):
-    FileList = GetCorpusFiles(CorpusDir)
-    TextList = []
-    for File in FileList:
-        TextList = ReadCorpus(File)  
-    TrainWord2VecModel(TextList)
     Model = Word2Vec.load(os.path.join(ModelSaveDir,ModelSaveName))
-    Data = JsonData['data']
-    SourceText = Data['source']
-    TargetText = Data['target']
-    SourceTextList = jieba.lcut(SourceText,cut_all=True)
-    TargetTextList = jieba.lcut(TargetText,cut_all=True)
-    RelAvg = Model.wv.n_similarity(SourceTextList,TargetTextList)
-    Rel = {"cmd":"soc","type":"response","data":{"defualt":str(RelAvg)}}
-    JsonStr = json.dumps(Rel,ensure_ascii=False)
-    return JsonStr
+    Data = JsonData['Data']
+    SourceText = Data['Source']
+    TargetTextList = Data['Target']
+    Start = Data["Start"]
+    JsonResponse = json.loads('[]')
+    SourceTextWordList = jieba.lcut(SourceText,cut_all=True)
+    if Start == -1 or SourceText == "" or TargetTextList == "" or len(SourceTextWordList) == 0:
+        return json.dumps({"Cmd":"Word2Vec","Type":"Similarity","Data":{"Tag":10,"Similarity":0}},ensure_ascii=False)
+    # if SourceText == "" or TargetTextList == "":
+    #     return json.dumps({"Cmd":"Word2Vec","Type":"Similarity","Data":{"Tag":1,"Similarity":0}},ensure_ascii=False) 
+    # if len(SourceTextWordList) == 0:
+    #     return json.dumps({"Cmd":"Word2Vec","Type":"Similarity","Data":{"Tag":1,"Similarity":0}},ensure_ascii=False)
+    for TargetText in TargetTextList:
+        TargetTextWordList = jieba.lcut(TargetText,cut_all=True)
+        if len(TargetTextWordList) == 0:
+            continue
+        Avg = Model.wv.n_similarity(SourceTextWordList,TargetTextWordList)
+        if Avg >= 0.75:
+            JsonResponse.append({"TargetText":TargetText,"Similarity":str(Avg)})
+    return json.dumps({"Cmd":"Word2Vec","Type":"Similarity","Data":{"Tag":0,"Response":JsonResponse}},ensure_ascii=False)
+
+def Train(JsonData):
+
+    FileList = GetCorpusFiles(CorpusDir)
+    TextList = ReadCorpus(FileList)  
+    TrainWord2VecModel(TextList)
+    Rel = {"Cmd":"Word2Vec","Type":"Train","Data":{"Response":True}}
+    JsonRel = json.dumps(Rel,ensure_ascii=False)
+    return JsonRel

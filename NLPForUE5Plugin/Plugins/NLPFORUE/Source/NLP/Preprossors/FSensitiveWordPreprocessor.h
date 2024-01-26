@@ -5,8 +5,6 @@
 #include "FPreprocessor.h"
 #include "CoreMinimal.h"
 
-using namespace std;
-
 // 敏感词DFA节点
 struct TreeNode
 {
@@ -15,40 +13,40 @@ struct TreeNode
 	TreeNode()
 	{
 		c_ = '0';
-		is_end_ = false;
+		IsEnd = false;
 	}
 
-	TreeNode(unsigned char c,bool is_end):c_(c),is_end_(is_end){}
+	TreeNode(unsigned char c,bool InIsEnd):c_(c),IsEnd(InIsEnd){}
 	
-	TreeNode* FindChildNode(const unsigned char next_char) const
+	TreeNode* FindChildNode(const unsigned char NextChar) const
 	{
-		if(subtree_map_.count(next_char))
+		if(SubTreeMap.count(NextChar))
 		{
-			return subtree_map_.at(next_char);
+			return SubTreeMap.at(NextChar);
 		}
 		return nullptr;
 	}
 
-	TreeNode* InsertChildNode(const unsigned char next_char)
+	TreeNode* InsertChildNode(const unsigned char NextChar)
 	{
 		// 判断要插入的节点是否已存在于树中,如果存在则反复空指针，表示插入失败
-		if(FindChildNode(next_char))
+		if(FindChildNode(NextChar))
 		{
 			return nullptr;
 		}
-		TreeNode* child = new TreeNode(next_char,false);
+		TreeNode* Child = new TreeNode(NextChar,false);
 		// 当内存不足时有可能会创建节点失败
-		if(child == nullptr)
+		if(Child == nullptr)
 		{
 			return nullptr;
 		}
-		subtree_map_.insert(make_pair(next_char,child));
-		return child;
+		SubTreeMap.insert(make_pair(NextChar,Child));
+		return Child;
 	}
 	
 	unsigned char c_;
-	bool is_end_;
-	TreeMap subtree_map_;
+	bool IsEnd;
+	TreeMap SubTreeMap;
 };
 
 // 敏感词DFA树
@@ -56,20 +54,21 @@ class DFATree
 {
 public:
 	DFATree(){}
-	DFATree(const vector<string>& sensitive_words);
+	DFATree(const vector<string>& SensitiveWords);
 	// 往词典中加入单个敏感词
-	bool AddSensitiveWord(const string& sensitive_word);
+	bool AddSensitiveWord(const string& SensitiveWord);
 	// 查找一句话中所有的敏感词
-	vector<string> FindAllSensitiveWords(const string& text,const int match_type = 2,const unsigned char replaced_char = '*') const;
+	vector<string> FindAllSensitiveWords(const std::string& Text,const int MatchType = 2) const;
+	bool HasSensitiveWord(const std::string Text,const int MatchType = 2) const;
 	// 将敏感词替换成指定符号
-	string ReplaceAllSensitiveWords(const string& text,const bool unix_shell_colored = true,const int match_type = 2,const unsigned char replaced_char = '*') const;
+	string ReplaceAllSensitiveWords(const string& Text,const bool UnixShellColored = true,const int MatchType = 2,const unsigned char ReplacedChar = '*') const;
 private:
-	TreeNode root_;
-
 	// 向树中插入节点
-	bool Insert(TreeNode* parent,const string& sensitive_word);
+	bool Insert(TreeNode* parent,const string& SensitiveWord);
 	// 检查一个句话里面是否存在敏感词
-	int CheckSensitiveWord(const TreeNode* node,const string& text,int begin_index,const int match_type) const;
+	int CheckSensitiveWord(const TreeNode* Node,const string& Text,int BeginIndex,const int MatchType) const;
+
+	TreeNode Root;
 };
 
 static const int kMinMatch = 1;
@@ -78,9 +77,9 @@ static const int kBoldRedANSIColorCodeLen = 11;
 static const string kBoldRedANSIColorCodePrefix = "\033[1;31m";
 static const string kBoldRedANSIColorCodeSuffix = "\033[0m";
 
-static int Utf8StringLen(const string& word)
+static int Utf8StringLen(const string& Word)
 {
-	const char* s = word.c_str();
+	const char* s = Word.c_str();
 	int Len = 0;
 	while(*s)
 	{
@@ -95,9 +94,10 @@ public:
 	static FSensitiveWordPreprocessor& Get();
 	~FSensitiveWordPreprocessor();
 
-	void LoadSensitiveWordDict(const string& Path);
-	string SensitiveWordFiltering(const string& Text);
-	vector<string> GetSensitiveWords(const string& Text);
+	void LoadSensitiveWordDict(const std::string& Path);
+	string SensitiveWordFiltering(const std::string& Text);
+	vector<string> GetSensitiveWords(const std::string& Text);
+	bool HasSensitiveWord(const std::string& Text);
 private:
 	FSensitiveWordPreprocessor();
 

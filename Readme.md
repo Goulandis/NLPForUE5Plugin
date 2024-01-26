@@ -52,35 +52,45 @@ git submodule update
 | l    | 习用语   | s    | 处所词         | z    | 状态词               |
 | m    | 数词     | t    | 时间词         | zg   | 例：且，丗，丢       |
 
+## UE与Python的通信指令
+
+### UE退出连接
+
+```json
+{
+    "cmd":"soc",
+    "type":"close",
+    "data":{}
+}
+```
+
+### 文本相似度比较
+
+```json
+{
+    "cmd":"Word2Vec",
+    "type":"Similarity",
+    "data":
+    {
+        "source":"源文本",
+        "target":"比较文本"
+    }
+}
+```
 
 
-| X：1+1        |      |      |
-| ------------- | ---- | ---- |
-| X的值         |      |      |
-| X的值是什么   |      |      |
-| X的值是多少   |      |      |
-| X的值是几     |      |      |
-| X的值等于什么 |      |      |
-| X的值等于多少 |      |      |
-| X的值等于几   |      |      |
-|               |      |      |
-| X的结果       |      |      |
-| X的结果是什么 |      |      |
-| X的结果是多少 |      |      |
-| X的结果是几   |      |      |
-|               |      |      |
-| X的和         |      |      |
-| X的和是什么   |      |      |
-| X的和是多少   |      |      |
-| X的和是几     |      |      |
-| X的和等于什么 |      |      |
-| X的和等于多少 |      |      |
-| X的和等于几   |      |      |
-|               |      |      |
-|               |      |      |
-|               |      |      |
-|               |      |      |
-|               |      |      |
-|               |      |      |
-|               |      |      |
 
+## 使用Windows.h的API FindWindow( LPCTSTR lpClassName,
+
+         LPCTSTR lpWindowName )是传递窗口名字符串报错
+
+这是因为使用不同的编译器，编译器会根据编码方式来选定使用LPCWSTR还是LPCTSTR，LPCWSTR对应32-bit指针, 指向一个unicode字符串常量的指针,每个字符占2字节；LPCTSTR对应32-bit指针 指向一个常字符串,每字符可能占1字节或2字节，取决于Unicode是否定义。于是就会出现参数类型不匹配的问题
+
+由于他们的底层都是char指针，所以可以进行强制转换，使用TEXT()宏或者_T()宏进行强制转换：
+
+```C++
+FindWindow(NULL,_T("xxx"));
+FindWindow(NULL,TEXT("xxx"));
+```
+
+由于TEXT宏和UE的TEXT宏冲突，所以可以选择使用_T宏。

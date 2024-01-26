@@ -1,58 +1,50 @@
-#include "FSqliteModule.h"
+#include "FTrainModule.h"
 #include <io.h>
 #include "FPreprocessorModule.h"
+#include "NLP/Managers/FPythonServerManager.h"
+#include "Format.h"
 
-FSqliteModule::FSqliteModule()
+FTrainModule::FTrainModule()
+{
+	Config = SConfig();
+}
+
+FTrainModule::~FTrainModule()
 {
 }
 
-FSqliteModule::~FSqliteModule()
+void FTrainModule::Handle(const std::string& Input, std::string& Output, const SConfig& InConfig)
 {
 }
 
-void FSqliteModule::Handle(const std::string& Input, std::string& Output, const SConfig& InConfig)
-{
-	OpenDatebase();
-	SelectAllSearchTextCol();
-	NLOG(LOGNLP,Log,TEXT("%d"),SearchTextVec.size());
-	CloseDatebase();
-}
-
-void FSqliteModule::ModuleConfig(const SConfig& InConfig)
+void FTrainModule::ModuleConfig(const SConfig& InConfig)
 {
 	Config = InConfig;
 }
 
-void FSqliteModule::Train()
+void FTrainModule::Train()
 {
-	std::thread TrainThread(std::bind(&FSqliteModule::TrainSelf,this));
+	std::thread TrainThread(std::bind(&FTrainModule::TrainSelf,this));
 	TrainThread.detach();
 }
 
-void FSqliteModule::TrainSelf()
+void FTrainModule::TrainSelf()
 {
 	NLOG(LOGNLP,Log,TEXT("[%s]Start training"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())));
-	CreateTable();
+	GlobalManager::CreateTable();
 	std::vector<std::string> Files;
-	std::string Path;
-	if(Config.CorpusDir == "Default")
-	{
-		Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + std::string(ConfigManager::CreateInstance().SqliteModuleConfig.at("DefaultCorpusPath"));
-	}
 	std::ifstream Ifs;
 	int Err = 0;
 	char* ErrMsg;
 	FPreprocessorModule* MPrep = new FPreprocessorModule();
 	// 读取语料目录下的所有语料文件
-	GetCorpusFiles(Path,Files);
-	OpenDatebase();
+	GetCorpusFiles(Config.SqliteCorpusDir,Files);
 	// 开启SQLite3事务机制
-	Err = sqlite3_exec(Database,"begin;",0,0,&ErrMsg);
+	Err = sqlite3_exec(GlobalManager::GetDatabase(),"begin;",0,0,&ErrMsg);
 	// 如果SQLite3事务机制开启失败，则退出训练
 	if(Err)
 	{
-		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::TrainSelf]%s"),*TOFS(std::string(sqlite3_errmsg(Database))));
-		CloseDatebase();
+		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::TrainSelf]%s"),*TOFS(std::string(sqlite3_errmsg(GlobalManager::GetDatabase()))));
 		Ifs.close();
 		return;
 	}
@@ -64,11 +56,11 @@ void FSqliteModule::TrainSelf()
 			continue;
 		}
 		NLOG(LOGNLP,Log,TEXT("[%s]Reading %s"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())),*TOFS(FilePath));
-		std::string Line;
+		std::string ReadLine;
 		// 读取单个文件语料
-		while (std::getline(Ifs,Line))
+		while (std::getline(Ifs,ReadLine))
 		{
-			std::vector<std::string> SplitVec = GlobalManager::SplitString(Line,ConfigManager::CreateInstance().CorpusSplitChr);
+			std::vector<std::string> SplitVec = GlobalManager::SplitString(ReadLine,ConfigManager::Get().CorpusSplitChr);
 			if(SplitVec.size() == 2)
 			{
 				std::string Text = SplitVec[0];
@@ -76,7 +68,8 @@ void FSqliteModule::TrainSelf()
 				// 判断输入语料是否包含敏感词，如果包含丢弃语料
 				if(Text != SearchText || SearchText.empty()) continue;
 				SearchText = MPrep->Prep_SpecialSymbol->DeteleSpecialSymbol(SearchText);
-				std::string Flag = ConfigManager::CreateInstance().SqliteModuleConfig.at("DefaultTrainFlag");
+				if(SearchText.empty()) continue;
+				std::string Flag = ConfigManager::Get().TrainModuleConfig.at("DefaultTrainFlag");
 				// 数据库插入
 				InsertToTable(Text,SearchText,Flag,SplitVec[1]);
 			}
@@ -85,19 +78,74 @@ void FSqliteModule::TrainSelf()
 		NLOG(LOGNLP,Log,TEXT("[%s]Completed %s"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())),*TOFS(FilePath));
 	}
 	// 关闭SQLite3事务机制
-	Err = sqlite3_exec(Database,"commit;",0,0,&ErrMsg);
+	Err = sqlite3_exec(GlobalManager::GetDatabase(),"commit;",0,0,&ErrMsg);
 	if(Err)
 	{
-		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::TrainSelf]%s"),*TOFS(std::string(sqlite3_errmsg(Database))));
-		CloseDatebase();
+		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::TrainSelf]%s"),*TOFS(std::string(sqlite3_errmsg(GlobalManager::GetDatabase()))));
 		return;
 	}
-	CloseDatebase();
 	delete MPrep;
 	NLOG(LOGNLP,Log,TEXT("[%s]End of training"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())));
+	
+	// 生成Word2Vec词向量模型训练语料
+	GenerateWord2VecCorpus();
+	FPythonServerManager::Get().SocCmd("Word2Vec","Train","{}");
 }
 
-void FSqliteModule::GetCorpusFiles(const std::string& CorpusDir,std::vector<std::string>& Files)
+void FTrainModule::GenerateWord2VecCorpus()
+{
+	NLOG(LOGNLP,Log,TEXT("[%s]Start Generating Word2Vec Curpos"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())));
+	std::vector<std::string> Files;
+	std::ifstream Ifs;
+	std::ofstream Ofs;
+	FPreprocessorModule* MPrep = new FPreprocessorModule();
+	// 读取语料目录下的所有语料文件
+	GetCorpusFiles(Config.SqliteCorpusDir,Files);
+	for(std::string FilePath : Files)
+	{
+		Ifs.open(FilePath);
+		if(!Ifs.is_open())
+		{
+			continue;
+		}
+		NLOG(LOGNLP,Log,TEXT("[%s]Reading %s"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())),*TOFS(FilePath));
+
+		// 生成Word2Vec模型训练语料的存储文件
+		std::string WritePath = Config.Word2VecCorpusDir + FilePath.substr(Config.SqliteCorpusDir.length(),FilePath.length());
+		NLOG(LOGNLP,Log,TEXT("[%s]Generating file : %s"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())),*TOFS(WritePath));
+		// 文件不存在则创建，文件存在且有内容则清空
+		Ofs.open(WritePath,ios::trunc);
+		
+		std::string ReadLine;
+		// 读取单个文件语料
+		while (std::getline(Ifs,ReadLine))
+		{
+			std::vector<std::string> SplitVec = GlobalManager::SplitString(ReadLine,ConfigManager::Get().CorpusSplitChr);
+			for(std::string Text : SplitVec)
+			{
+				if(MPrep->Prep_SensitiveWord->HasSensitiveWord(Text)) continue;
+				Text = MPrep->Prep_SpecialSymbol->DeteleSpecialSymbol(Text);
+				std::vector<std::string> WordVec;
+				GlobalManager::jieba.Cut(Text, WordVec);
+				std::string WriteLine;
+				for (std::string Word : WordVec)
+				{
+					WriteLine += Word + " ";
+				}
+				// 使用\n作为包与包之间的间隔符，避免TCP的粘包现象
+				WriteLine += "\n";
+				Ofs << WriteLine;
+			}
+		}
+		Ifs.close();
+		Ofs.close();
+		NLOG(LOGNLP,Log,TEXT("[%s]Generated file Completed : %s"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())),*TOFS(FilePath));
+	}
+	delete MPrep;
+	NLOG(LOGNLP,Log,TEXT("[%s]Word2Vec corpus generated"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())));
+}
+
+void FTrainModule::GetCorpusFiles(const std::string& CorpusDir,std::vector<std::string>& Files)
 {
 	// 存储文件信息的结构体
 	_finddata_t FileInfo;
@@ -131,104 +179,36 @@ void FSqliteModule::GetCorpusFiles(const std::string& CorpusDir,std::vector<std:
 	_findclose(hFile);
 }
 
-void FSqliteModule::OpenDatebase(std::string Path,sqlite3* DB)
-{
-	if(Path == "Default")
-	{
-		Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + std::string(ConfigManager::CreateInstance().SqliteModuleConfig.at("DefaultDatabasePath"));
-	}
-	if(DB == nullptr)
-	{
-		int Err = sqlite3_open(Path.c_str(),&Database);
-		if(Err)
-		{
-			NLOG(LOGNLP,Error,TEXT("[FSqliteModule::OpenDatebase]%s"),*TOFS(std::string(sqlite3_errmsg(Database))));
-		}
-	}
-	else
-	{
-		int Err = sqlite3_open(Path.c_str(),&DB);
-		if(Err)
-		{
-			NLOG(LOGNLP,Error,TEXT("[FSqliteModule::OpenDatebase]%s"),*TOFS(std::string(sqlite3_errmsg(DB))));
-		}
-	}
-}
 
-void FSqliteModule::CloseDatebase(sqlite3* DB)
-{
-	if(DB == nullptr)
-	{
-		int Err = sqlite3_close(Database);
-		if(Err)
-		{
-			NLOG(LOGNLP,Error,TEXT("[FSqliteModule::CloseDatebase]%s"),*TOFS(std::string(sqlite3_errmsg(Database))));
-		}
-	}
-	else
-	{
-		int Err = sqlite3_close(DB);
-		if(Err)
-		{
-			NLOG(LOGNLP,Error,TEXT("[FSqliteModule::CloseDatebase]%s"),*TOFS(std::string(sqlite3_errmsg(DB))));
-		}
-	}
-}
 
-void FSqliteModule::CreateTable(const std::string& Name)
-{
-	OpenDatebase();
-	char* ErrMsg;
-	int Err;
-	std::string SqlDelte = "DROP TABLE IF EXISTS " + Name;
-	Err = sqlite3_exec(Database,SqlDelte.c_str(),nullptr,0,&ErrMsg);
-	if(Err != SQLITE_OK)
-	{
-		NLOG(LOGNLP,Warning,TEXT("[FSqliteModule::CreateTable]%s"),*TOFS(std::string(ErrMsg)));
-	}
-	std::string Sql = "CREATE TABLE IF NOT EXISTS "+ Name + " ("
-			"id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
-			"text NTEXT	NOT NULL,"
-			"search_text NTEXT	NOT NULL,"
-			"conversation CHAR(20),"
-			"created_at	 DATETIME,"
-			"in_response_to	NTEXT NOT NULL);";
-	Err = sqlite3_exec(Database,Sql.c_str(),nullptr,0,&ErrMsg);
-	if(Err != SQLITE_OK)
-	{
-		NLOG(LOGNLP,Warning,TEXT("[FSqliteModule::CreateTable]%s"),*TOFS(std::string(ErrMsg)));
-	}
-	CloseDatebase();
-}
-
-void FSqliteModule::InsertToTable(const std::string& Text, const std::string& SearchText,const std::string& Conversation, const std::string& InReponseTo)
+void FTrainModule::InsertToTable(const std::string& Text, const std::string& SearchText,const std::string& Conversation, const std::string& InReponseTo)
 {
 	char* Sql = sqlite3_mprintf("INSERT INTO statement (text,search_text,conversation,created_at,in_response_to) "
 					"VALUES ('%q','%q','%q',DATETIME('NOW', 'LOCALTIME'),'%q');",Text.c_str(),SearchText.c_str(),Conversation.c_str(),InReponseTo.c_str());
 	char* ErrMsg;
-	int Err = sqlite3_exec(Database,Sql,nullptr,0,&ErrMsg);
+	int Err = sqlite3_exec(GlobalManager::GetDatabase(),Sql,nullptr,0,&ErrMsg);
 	if(Err)
 	{
-		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::InsertToTable]%s"),*TOFS(std::string(sqlite3_errmsg(Database))));
+		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::InsertToTable]%s"),*TOFS(std::string(sqlite3_errmsg(GlobalManager::GetDatabase()))));
 	}
 }
 
-void FSqliteModule::SelectAllSearchTextCol()
+void FTrainModule::SelectAllSearchTextCol()
 {
 	char* Sql = sqlite3_mprintf("SELECT id,search_text FROM %q",Config.MainTableName.c_str());
 	char* ErrMsg;
-	int Err = sqlite3_exec(Database,Sql,FSqliteModule::SelectAllSearchTextColCallback,this,&ErrMsg);
+	int Err = sqlite3_exec(Database,Sql,FTrainModule::SelectAllSearchTextColCallback,this,&ErrMsg);
 	if(Err)
 	{
 		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::SelectAllSearchTextCol]%s"),*TOFS(std::string(sqlite3_errmsg(Database))));
 	}
 }
 
-int FSqliteModule::SelectAllSearchTextColCallback(void* ThisObj, int Argc, char** Argv, char** AzColName)
+int FTrainModule::SelectAllSearchTextColCallback(void* ThisObj, int Argc, char** Argv, char** AzColName)
 {
 	if(Argc == 2)
 	{
-		((FSqliteModule*)ThisObj)->SearchTextVec.push_back(std::pair<std::string,std::string>(Argv[0],Argv[1]));
+		((FTrainModule*)ThisObj)->SearchTextVec.push_back(std::pair<std::string,std::string>(Argv[0],Argv[1]));
 		return 0;
 	}
 	return 1;

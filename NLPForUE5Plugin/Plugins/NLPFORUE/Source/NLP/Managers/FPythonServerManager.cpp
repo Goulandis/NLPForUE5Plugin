@@ -9,7 +9,13 @@ FPythonServerManager& FPythonServerManager::Get()
 
 bool FPythonServerManager::SocConnect(const std::string& InIP,const int InPort)
 {
-	return Soc.SocConnet();
+	if(Soc.IsConnected) return true;
+	return Soc.SocReconnet();
+}
+
+bool FPythonServerManager::SocReconnect()
+{
+	return Soc.SocReconnet();
 }
 
 bool FPythonServerManager::SocSend(const std::string& Msg)
@@ -51,15 +57,32 @@ void FPythonServerManager::Word2VecServerWindowFind()
 	}
 	else
 	{
-		NLOG(LOGNLP,Error,TEXT("Window Word2VecServer has been found : %d"),Word2VecServerWindwosHandle);
+		NLOG(LOGNLP,Log,TEXT("Window Word2VecServer has been found : %d"),Word2VecServerWindwosHandle);
+	}
+}
+
+void FPythonServerManager::OnRecvCallback(nlohmann::json Json)
+{
+	if(Json.at("Cmd") == "Word2Vec")
+	{
+		if(Json.at("Type") == "Similarity")
+		{
+			nlohmann::json Data = Json.at("Data");
+			if(Data.at("Tag") == 0 || Data.at("Tag") == 10)
+			{
+				BaseLogicAdapterCallback(Json);
+			}
+		}
 	}
 }
 
 FPythonServerManager::FPythonServerManager()
 {
 	Soc = FSoc();
+	Soc.ExternalCallbacks = std::bind(&FPythonServerManager::OnRecvCallback,this,std::placeholders::_1);
 }
 
 FPythonServerManager::~FPythonServerManager()
 {
+	Word2VecServerClose();
 }

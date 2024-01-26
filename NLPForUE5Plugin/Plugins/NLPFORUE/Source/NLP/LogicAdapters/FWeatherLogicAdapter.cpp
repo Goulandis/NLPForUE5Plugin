@@ -370,7 +370,7 @@ std::string FWeatherLogicAdapter::GetWeatherInfo(const std::string& City, const 
 	// 获取城市编码
 	std::string Adcode = GetCityAdcode(City);
 	// 读取高德平台https的get请求配置
-	nlohmann::json Gd = ConfigManager::CreateInstance().WeahterLogicAdapterConfig.at("WeatherInfoHttpRequest").at("Gd");
+	nlohmann::json Gd = ConfigManager::Get().WeahterLogicAdapterConfig.at("WeatherInfoHttpRequest").at("Gd");
 	// 向高德平台发起https的get请求，查询指定城市今天、明天、后天和大后天的天气信息
 	httplib::Client HttpClient(Gd.at("Url"));
 	httplib::Params Params;
@@ -470,7 +470,7 @@ bool FWeatherLogicAdapter::IsRightDate(const std::tm Date)
 
 void FWeatherLogicAdapter::InitCityAdcode()
 {
-	std::string CityAdcodeDictPath = ConfigManager::CreateInstance().WeahterLogicAdapterConfig.at("CityAdcodeDictPath");
+	std::string CityAdcodeDictPath = ConfigManager::Get().WeahterLogicAdapterConfig.at("CityAdcodeDictPath");
 	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + CityAdcodeDictPath;
 	std::ifstream Ifs(Path);
 	if(!Ifs.is_open())
@@ -512,7 +512,7 @@ void FWeatherLogicAdapter::InitCityAdcode()
 
 void FWeatherLogicAdapter::InitAskWeatherTextTag()
 {
-	std::string AskWeahterTextTagDictPath = ConfigManager::CreateInstance().WeahterLogicAdapterConfig.at("AskWeatherTextTagDictPath");
+	std::string AskWeahterTextTagDictPath = ConfigManager::Get().WeahterLogicAdapterConfig.at("AskWeatherTextTagDictPath");
 	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + AskWeahterTextTagDictPath;
 	std::ifstream Ifs(Path);
 	if(!Ifs.is_open())

@@ -1,0 +1,15 @@
+{
+    "Soc":
+    {
+        "IP":"127.0.0.1",
+        "Port":7214,
+        "RecvBuff":1024
+    },
+    "Word2Vec":
+    {
+        "CorpusDir":"E:/Goulandis/NLPForUE5Plugin/NLPForUE5Plugin/Plugins/NLPFORUE/Resources/Train/Corpus/",
+        "ModelSaveDir":"E:/Goulandis/NLPForUE5Plugin/NLPForUE5Plugin/Plugins/NLPFORUE/Resources/Train/",
+        "ModelSaveName":"Word2Vec",
+        "Train":true
+    }
+}

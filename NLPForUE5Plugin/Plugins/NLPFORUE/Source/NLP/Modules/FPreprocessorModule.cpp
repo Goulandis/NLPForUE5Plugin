@@ -8,7 +8,7 @@ FPreprocessorModule::FPreprocessorModule()
 	Prep_SpecialSymbol = &GetPreprocessor<FSpecialSymbolPreprocessor>();
 	Prep_StopWord = &GetPreprocessor<FStopWordFilteringPreprocessor>();
 	
-	std::string SensitiveWordPath = ConfigManager::CreateInstance().SensitiveWordPreprocessorConfig.at("SensitiveWordPath");
+	std::string SensitiveWordPath = ConfigManager::Get().SensitiveWordPreprocessorConfig.at("SensitiveWordPath");
 	const std::string SensitiveWordDictPath = GlobalManager::RESOURCE_ABSOLUTE_PATH + SensitiveWordPath;
 	NLOG(LOGNLP,Log,TEXT("Loading sensitive word from %s"),*TOFS(SensitiveWordDictPath));
 	Prep_SensitiveWord->LoadSensitiveWordDict(SensitiveWordDictPath);

@@ -6,7 +6,7 @@ FMathLogicAdapter::FMathLogicAdapter()
 {
 	NLOG(LOGNLP,Log,TEXT("FMathLogicAdapter constructed"));
 	// 加载词典缓存
-	std::string MathConfideceLevelDictPath = ConfigManager::CreateInstance().MathLogicAdapterConfig.at("MathConfideceLevelDictPath");
+	std::string MathConfideceLevelDictPath = ConfigManager::Get().MathLogicAdapterConfig.at("MathConfideceLevelDictPath");
 	const std::string Path = GlobalManager::RESOURCE_ABSOLUTE_PATH + MathConfideceLevelDictPath;
 	std::ifstream Ifs(Path);
 	if(Ifs.is_open())

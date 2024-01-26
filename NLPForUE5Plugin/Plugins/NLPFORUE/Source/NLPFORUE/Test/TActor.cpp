@@ -1,5 +1,5 @@
 #include "TActor.h"
-#include "NLPFORUE/Common/FDefine.h"
+#include "NLP/Managers/FPythonServerManager.h"
 #include "NLP/Common/GlobalManager.h"
 #include <regex>
 #include "Python.h"
@@ -12,17 +12,7 @@ FString ATActor::ComTest(FString Text)
 	std::string Input = TCHAR_TO_UTF8(*Text);
 	std::string Output;
 
-	//MSql->Train();
-	//MSql->Handle(Input,Output);
-	
-	//std::wstring cmd = L"E:/Anaconda/envs/NLPFORUE/Python.exe E:/Goulandis/NLPForUE5Plugin/NLPForUE5Plugin/Plugins/NLPFORUE/Scripts/Gensim/Word2Vec.py 这是测试字符串1 这是测试字符串2";
-	//const char* GBK_LOCAL_NAME = "CHS";
-	//std::wstring_convert<std::codecvt<wchar_t,char,mbstate_t>> conv(new std::codecvt<wchar_t,char,mbstate_t>(GBK_LOCAL_NAME));
-	//std::wstring wcmd = conv.from_bytes(cmd);
-	// std::wstring_convert<std::codecvt_utf8<wchar_t>> Converter;
-	// std::string utf8cmd = Converter.to_bytes(cmd);
-	//
-	// system("E:/Anaconda/envs/NLPFORUE/Python.exe E:/Goulandis/NLPForUE5Plugin/NLPForUE5Plugin/Plugins/NLPFORUE/Scripts/Gensim/Word2Vec.py");
+	MLoap->Loap_Base->Process(Input,Output);
 
 	FString Rel = FString(UTF8_TO_TCHAR(Output.c_str()));
 	return Rel;
@@ -30,14 +20,18 @@ FString ATActor::ComTest(FString Text)
 
 bool ATActor::SocConnect(FString InIP, int InPort)
 {
-	Soc = FSoc();
-	return Soc.SocConnet();
+	return FPythonServerManager::Get().SocConnect();
+}
+
+bool ATActor::SocReconnect()
+{
+	return FPythonServerManager::Get().SocReconnect();
 }
 
 bool ATActor::SocSend(FString Msg)
 {
 	std::string MsgStr = TCHAR_TO_UTF8(*Msg);
-	return Soc.SocSend(MsgStr);
+	return FPythonServerManager::Get().SocSend(MsgStr);
 }
 
 bool ATActor::SocCmd(FString InCmd, FString InType, FString InData)
@@ -45,12 +39,13 @@ bool ATActor::SocCmd(FString InCmd, FString InType, FString InData)
 	std::string Cmd = TCHAR_TO_UTF8(*InCmd);
 	std::string Type = TCHAR_TO_UTF8(*InType);
 	std::string Data = TCHAR_TO_UTF8(*InData);
-	return Soc.SocCmd(Cmd,Type,Data);
+	
+	return FPythonServerManager::Get().SocCmd(Cmd,Type,Data);
 }
 
 void ATActor::SocClose()
 {
-	Soc.SocClose();
+	FPythonServerManager::Get().SocClose();
 }
 
 void ATActor::Word2VecServerClose()
@@ -81,6 +76,11 @@ void ATActor::Word2VecServerWindowFind()
 	}
 }
 
+void ATActor::Train()
+{
+	MTrain->Train();
+}
+
 // Sets default values
 ATActor::ATActor()
 {
@@ -88,7 +88,7 @@ ATActor::ATActor()
 	PrimaryActorTick.bCanEverTick = true;
 	MPrep = MakeShareable(new FPreprocessorModule());
 	MLoap = MakeShareable(new FLogicAdapterModule());
-	MSql = MakeShareable(new FSqliteModule());
+	MTrain = MakeShareable(new FTrainModule());
 }
 
 ATActor::~ATActor()

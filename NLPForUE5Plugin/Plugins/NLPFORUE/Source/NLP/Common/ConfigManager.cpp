@@ -2,7 +2,7 @@
 #include <fstream>
 #include "GlobalManager.h"
 
-ConfigManager& ConfigManager::CreateInstance()
+ConfigManager& ConfigManager::Get()
 {
 	static ConfigManager Instance;
 	return Instance;
@@ -35,7 +35,7 @@ void ConfigManager::InitConfigObject()
 	MathLogicAdapterConfig = Config.at("MathLogicAdapter");
 	SensitiveWordPreprocessorConfig = Config.at("SensitiveWordPreprocessor");
 	SpecialSymbolPreprocessor = Config.at("SpecialSymbolPreprocessor");
-	SqliteModuleConfig = Config.at("SqliteModule");
+	TrainModuleConfig = Config.at("TrainModule");
 }
 
 ConfigManager::~ConfigManager()

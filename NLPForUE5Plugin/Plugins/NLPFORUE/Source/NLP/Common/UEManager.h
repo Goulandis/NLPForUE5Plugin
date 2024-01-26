@@ -8,6 +8,7 @@
 DECLARE_LOG_CATEGORY_EXTERN(LOGNLP, All, All)
 #define TOFS(Str) FString(UTF8_TO_TCHAR(Str.c_str()))
 #define WSTOFS(WStr) FString(WStr.c_str())
+#define CHTOFS(Chr) FString(Chr)
 #define PROJECTPLUGINDIR FPaths::ProjectPluginsDir()
 #define TOUTF8(Param) TCHAR_TO_UTF8(Param)
 #define NLOG(CategoryName,Verbosity,Format,...) UE_PRIVATE_LOG(PREPROCESSOR_NOTHING, constexpr, CategoryName, Verbosity, Format, ##__VA_ARGS__)
