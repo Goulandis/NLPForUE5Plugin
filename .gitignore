@@ -15,3 +15,5 @@ envs/
 ThirdParty/
 NLPForUE5Plugin/Plugins/NLPFORUE/Scripts/db.sqlite3
 Scripts.lnk
+NLPForUE5Plugin/Plugins/NLPFORUE/Resources/Train/Corpus.db
+NLPForUE5Plugin/Plugins/NLPFORUE/Resources/Train/Word2Vec

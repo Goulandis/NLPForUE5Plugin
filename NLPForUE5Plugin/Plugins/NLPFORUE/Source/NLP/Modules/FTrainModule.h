@@ -22,6 +22,7 @@ public:
 	void Train();
 private:
 	void TrainSelf();
+	
 	void GetCorpusFiles(const std::string& CorpusDir,std::vector<std::string>& Files);
 
 	void OpenDatebase(std::string Path = "Default",sqlite3* DB = nullptr);
