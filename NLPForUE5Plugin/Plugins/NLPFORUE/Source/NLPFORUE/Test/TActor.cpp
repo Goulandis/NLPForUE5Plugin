@@ -58,6 +58,7 @@ void ATActor::Word2VecServerSetup()
 	std::thread Word2VecServerSetupThread([]()
 	{
 		std::string Cmd = TCHAR_TO_UTF8(*(PROJECTPLUGINDIR + "NLPFORUE/Scripts/Gensim/Setup.bat"));
+		UE_LOG(LOGNLP, Log, TEXT("Using %s to setup python server"), *FString(Cmd.c_str()));
 		system(Cmd.c_str());
 	});
 	Word2VecServerSetupThread.detach();
@@ -79,6 +80,12 @@ void ATActor::Word2VecServerWindowFind()
 void ATActor::Train()
 {
 	MTrain->Train();
+}
+
+void ATActor::MyTest()
+{
+	std::string Cmd = "E:/Git/NLPForUE5Plugin/NLPForUE5Plugin/Plugins/NLPFORUE/Scripts/Gensim/Setup.bat";
+	system(Cmd.c_str());
 }
 
 // Sets default values

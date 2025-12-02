@@ -30,66 +30,66 @@ void FTrainModule::Train()
 
 void FTrainModule::TrainSelf()
 {
-	NLOG(LOGNLP,Log,TEXT("[%s]Start training"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())));
-	GlobalManager::CreateTable();
-	std::vector<std::string> Files;
-	std::ifstream Ifs;
-	int Err = 0;
-	char* ErrMsg;
-	FPreprocessorModule* MPrep = new FPreprocessorModule();
-	// 读取语料目录下的所有语料文件
-	GetCorpusFiles(Config.SqliteCorpusDir,Files);
-	// 开启SQLite3事务机制
-	Err = sqlite3_exec(GlobalManager::GetDatabase(),"begin;",0,0,&ErrMsg);
-	// 如果SQLite3事务机制开启失败，则退出训练
-	if(Err)
-	{
-		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::TrainSelf]%s"),*TOFS(std::string(sqlite3_errmsg(GlobalManager::GetDatabase()))));
-		Ifs.close();
-		return;
-	}
-	for(std::string FilePath : Files)
-	{
-		Ifs.open(FilePath);
-		if(!Ifs.is_open())
-		{
-			continue;
-		}
-		NLOG(LOGNLP,Log,TEXT("[%s]Reading %s"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())),*TOFS(FilePath));
-		std::string ReadLine;
-		// 读取单个文件语料
-		while (std::getline(Ifs,ReadLine))
-		{
-			std::vector<std::string> SplitVec = GlobalManager::SplitString(ReadLine,ConfigManager::Get().CorpusSplitChr);
-			if(SplitVec.size() == 2)
-			{
-				std::string Text = SplitVec[0];
-				std::string SearchText = MPrep->Prep_SensitiveWord->SensitiveWordFiltering(Text);
-				// 判断输入语料是否包含敏感词，如果包含丢弃语料
-				if(Text != SearchText || SearchText.empty()) continue;
-				SearchText = MPrep->Prep_SpecialSymbol->DeteleSpecialSymbol(SearchText);
-				if(SearchText.empty()) continue;
-				std::string Flag = ConfigManager::Get().TrainModuleConfig.at("DefaultTrainFlag");
-				// 数据库插入
-				InsertToTable(Text,SearchText,Flag,SplitVec[1]);
-			}
-		}
-		Ifs.close();
-		NLOG(LOGNLP,Log,TEXT("[%s]Completed %s"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())),*TOFS(FilePath));
-	}
-	// 关闭SQLite3事务机制
-	Err = sqlite3_exec(GlobalManager::GetDatabase(),"commit;",0,0,&ErrMsg);
-	if(Err)
-	{
-		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::TrainSelf]%s"),*TOFS(std::string(sqlite3_errmsg(GlobalManager::GetDatabase()))));
-		return;
-	}
-	delete MPrep;
-	NLOG(LOGNLP,Log,TEXT("[%s]End of training"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())));
-	
-	// 生成Word2Vec词向量模型训练语料
-	GenerateWord2VecCorpus();
-	FPythonServerManager::Get().SocCmd("Word2Vec","Train","{}");
+	//NLOG(LOGNLP,Log,TEXT("[%s]Start training"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())));
+	//GlobalManager::CreateTable();
+	//std::vector<std::string> Files;
+	//std::ifstream Ifs;
+	//int Err = 0;
+	//char* ErrMsg;
+	//FPreprocessorModule* MPrep = new FPreprocessorModule();
+	//// 读取语料目录下的所有语料文件
+	//GetCorpusFiles(Config.SqliteCorpusDir,Files);
+	//// 开启SQLite3事务机制
+	//Err = sqlite3_exec(GlobalManager::GetDatabase(),"begin;",0,0,&ErrMsg);
+	//// 如果SQLite3事务机制开启失败，则退出训练
+	//if(Err)
+	//{
+	//	NLOG(LOGNLP,Error,TEXT("[FSqliteModule::TrainSelf]%s"),*TOFS(std::string(sqlite3_errmsg(GlobalManager::GetDatabase()))));
+	//	Ifs.close();
+	//	return;
+	//}
+	//for(std::string FilePath : Files)
+	//{
+	//	Ifs.open(FilePath);
+	//	if(!Ifs.is_open())
+	//	{
+	//		continue;
+	//	}
+	//	NLOG(LOGNLP,Log,TEXT("[%s]Reading %s"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())),*TOFS(FilePath));
+	//	std::string ReadLine;
+	//	// 读取单个文件语料
+	//	while (std::getline(Ifs,ReadLine))
+	//	{
+	//		std::vector<std::string> SplitVec = GlobalManager::SplitString(ReadLine,ConfigManager::Get().CorpusSplitChr);
+	//		if(SplitVec.size() == 2)
+	//		{
+	//			std::string Text = SplitVec[0];
+	//			std::string SearchText = MPrep->Prep_SensitiveWord->SensitiveWordFiltering(Text);
+	//			// 判断输入语料是否包含敏感词，如果包含丢弃语料
+	//			if(Text != SearchText || SearchText.empty()) continue;
+	//			SearchText = MPrep->Prep_SpecialSymbol->DeteleSpecialSymbol(SearchText);
+	//			if(SearchText.empty()) continue;
+	//			std::string Flag = ConfigManager::Get().TrainModuleConfig.at("DefaultTrainFlag");
+	//			// 数据库插入
+	//			InsertToTable(Text,SearchText,Flag,SplitVec[1]);
+	//		}
+	//	}
+	//	Ifs.close();
+	//	NLOG(LOGNLP,Log,TEXT("[%s]Completed %s"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())),*TOFS(FilePath));
+	//}
+	//// 关闭SQLite3事务机制
+	//Err = sqlite3_exec(GlobalManager::GetDatabase(),"commit;",0,0,&ErrMsg);
+	//if(Err)
+	//{
+	//	NLOG(LOGNLP,Error,TEXT("[FSqliteModule::TrainSelf]%s"),*TOFS(std::string(sqlite3_errmsg(GlobalManager::GetDatabase()))));
+	//	return;
+	//}
+	//delete MPrep;
+	//NLOG(LOGNLP,Log,TEXT("[%s]End of training"),*TOFS(GlobalManager::TmToString(GlobalManager::GetNowLocalTime())));
+	//
+	//// 生成Word2Vec词向量模型训练语料
+	//GenerateWord2VecCorpus();
+	//FPythonServerManager::Get().SocCmd("Word2Vec","Train","{}");
 }
 
 void FTrainModule::GenerateWord2VecCorpus()
@@ -183,25 +183,25 @@ void FTrainModule::GetCorpusFiles(const std::string& CorpusDir,std::vector<std::
 
 void FTrainModule::InsertToTable(const std::string& Text, const std::string& SearchText,const std::string& Conversation, const std::string& InReponseTo)
 {
-	char* Sql = sqlite3_mprintf("INSERT INTO statement (text,search_text,conversation,created_at,in_response_to) "
+	/*char* Sql = sqlite3_mprintf("INSERT INTO statement (text,search_text,conversation,created_at,in_response_to) "
 					"VALUES ('%q','%q','%q',DATETIME('NOW', 'LOCALTIME'),'%q');",Text.c_str(),SearchText.c_str(),Conversation.c_str(),InReponseTo.c_str());
 	char* ErrMsg;
 	int Err = sqlite3_exec(GlobalManager::GetDatabase(),Sql,nullptr,0,&ErrMsg);
 	if(Err)
 	{
 		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::InsertToTable]%s"),*TOFS(std::string(sqlite3_errmsg(GlobalManager::GetDatabase()))));
-	}
+	}*/
 }
 
 void FTrainModule::SelectAllSearchTextCol()
 {
-	char* Sql = sqlite3_mprintf("SELECT id,search_text FROM %q",Config.MainTableName.c_str());
+	/*char* Sql = sqlite3_mprintf("SELECT id,search_text FROM %q",Config.MainTableName.c_str());
 	char* ErrMsg;
 	int Err = sqlite3_exec(Database,Sql,FTrainModule::SelectAllSearchTextColCallback,this,&ErrMsg);
 	if(Err)
 	{
 		NLOG(LOGNLP,Error,TEXT("[FSqliteModule::SelectAllSearchTextCol]%s"),*TOFS(std::string(sqlite3_errmsg(Database))));
-	}
+	}*/
 }
 
 int FTrainModule::SelectAllSearchTextColCallback(void* ThisObj, int Argc, char** Argv, char** AzColName)

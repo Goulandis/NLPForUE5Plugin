@@ -60,6 +60,9 @@ protected:
 	void Word2VecServerWindowFind();
 	UFUNCTION(BlueprintCallable,Category="TActor")
 	void Train();
+
+	UFUNCTION(BlueprintCallable, Category = "TActor")
+	void MyTest();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

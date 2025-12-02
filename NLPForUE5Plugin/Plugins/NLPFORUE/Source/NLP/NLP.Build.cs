@@ -28,14 +28,14 @@ public class NLP : ModuleRules
 			Path.Combine(ModulePath, "../rapidjson"),
 			Path.Combine(ModulePath, "../nlohmann"),
 			Path.Combine(ModulePath, "../StringFormat"),
-			"E:/Anaconda/envs/NLPFORUE/include"
-		});
+            "E:/Git/NLPForUE5Plugin/envs/NLPFORUE/include"
+        });
 		PublicAdditionalLibraries.AddRange(new string[]
 		{
 			Path.Combine(ModulePath,"../SQLite3/sqlite3.lib"),
-			"E:/Anaconda/envs/NLPFORUE/libs/_tkinter.lib",
-			"E:/Anaconda/envs/NLPFORUE/libs/python3.lib",
-			"E:/Anaconda/envs/NLPFORUE/libs/python39.lib"
-		});
+            "E:/Git/NLPForUE5Plugin/envs/NLPFORUE/libs/_tkinter.lib",
+            "E:/Git/NLPForUE5Plugin/envs/NLPFORUE/libs/python3.lib",
+            "E:/Git/NLPForUE5Plugin/envs/NLPFORUE/libs/python39.lib"
+        });
 	}
 }
